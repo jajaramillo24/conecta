@@ -12,6 +12,7 @@ import { SportsSection } from './components/SportsSection';
 import { AlumniMapSection } from './components/AlumniMapSection';
 import { CommunitySection } from './components/CommunitySection';
 import { MyBookingsModal } from './components/MyBookingsModal';
+import { AIAssistantModal } from './components/AIAssistantModal';
 import { Footer } from './components/Footer';
 import {
   INITIAL_ALUMNI,
@@ -25,11 +26,10 @@ import {
   INITIAL_CHAT_MESSAGES,
 } from './data/mockData';
 import { MentorshipBooking, UbpMeme, ChatMessage } from './types';
-import { ArrowRight, Sparkles, GraduationCap, Users, Calendar, Trophy, Globe } from 'lucide-react';
+import { ArrowRight, Bot, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('noticias');
-  const [userRole, setUserRole] = useState<'alumno' | 'egresado'>('alumno');
 
   // App data state
   const [news] = useState(INITIAL_NEWS);
@@ -61,6 +61,7 @@ export default function App() {
     },
   ]);
   const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
 
   // Toggle event registration
   const handleToggleEventRegistration = (eventId: string) => {
@@ -114,7 +115,6 @@ export default function App() {
 
   // Add free player in soccer tournament
   const handleRegisterFreePlayer = (playerName: string, career: string, role: string) => {
-    // Add to student or alumni team or show feedback
     setTeams((prev) => [
       ...prev,
       {
@@ -184,8 +184,8 @@ export default function App() {
     const newMsg: ChatMessage = {
       id: `chat-${Date.now()}`,
       channelId,
-      senderName: userRole === 'alumno' ? 'Juan Andrés' : 'Juan Andrés (Egresado)',
-      senderRole: userRole === 'alumno' ? 'Alumno' : 'Egresado',
+      senderName: 'Juan Andrés',
+      senderRole: 'Alumno',
       senderCareer: 'tecnologia',
       text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -198,7 +198,7 @@ export default function App() {
     }));
   };
 
-  // Add mentor slot (for alumni)
+  // Add mentor slot
   const handleAddMentorSlot = (mentorId: string, day: string, time: string) => {
     setMentors((prev) =>
       prev.map((m) => {
@@ -211,7 +211,6 @@ export default function App() {
     );
   };
 
-  // Shortcut from News or Map to Mentorship with specific mentor
   const handleOpenMentorshipForAlumni = (alumniName: string) => {
     setActiveTab('mentorias');
   };
@@ -224,21 +223,20 @@ export default function App() {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        userRole={userRole}
-        setUserRole={setUserRole}
         bookingCount={bookings.length + registeredEvents.length}
         onOpenMyBookings={() => setIsBookingsModalOpen(true)}
+        onOpenAIAssistant={() => setIsAIAssistantOpen(true)}
       />
 
-      {/* Hero Announcement Bar */}
-      <div className="bg-[#A3223A] text-white py-2.5 px-4 text-xs">
+      {/* Campus Announcement Ribbon */}
+      <div className="bg-[#A3223A] text-white py-2 px-4 text-xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2 font-medium">
             <span className="bg-white/20 px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider text-[10px]">
-              Comunidad Activa
+              Copa Blas Pascal
             </span>
             <span className="truncate">
-              Inscripciones abiertas a la <strong>Copa Blas Pascal 2026</strong> (Alumnos vs. Egresados) en el Campus Argüello.
+              Inscripciones abiertas para el Torneo de Fútbol Alumnos vs. Egresados en el Campus de Argüello.
             </span>
           </div>
           <button
@@ -251,37 +249,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main Container */}
+      {/* Main Content Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        {/* Role Quick Indicator Banner */}
-        <div className="mb-6 p-3 bg-white rounded-xl border border-stone-200/80 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#A3223A]/10 text-[#A3223A] flex items-center justify-center font-bold">
-              {userRole === 'alumno' ? <Users className="w-4 h-4" /> : <GraduationCap className="w-4 h-4" />}
-            </div>
-            <div>
-              <span className="font-semibold text-stone-900 block">
-                Navegando como: {userRole === 'alumno' ? 'Estudiante UBP (Ing. en Informática)' : 'Graduado UBP (Promoción 2022)'}
-              </span>
-              <span className="text-stone-500 text-[11px]">
-                {userRole === 'alumno'
-                  ? 'Podés agendar mentorías Book With Me, sumarte a partidos y postularte a búsquedas laborales.'
-                  : 'Podés ofrecer horarios de mentoría, inscribir tu equipo en el torneo y publicar avisos de tu empresa.'}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setUserRole(userRole === 'alumno' ? 'egresado' : 'alumno')}
-              className="px-3 py-1.5 text-xs font-semibold text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-md transition-colors whitespace-nowrap"
-            >
-              Cambiar a {userRole === 'alumno' ? 'Egresado' : 'Alumno'}
-            </button>
-          </div>
-        </div>
-
-        {/* Tab Sections */}
         {activeTab === 'noticias' && (
           <NewsSection
             news={news}
@@ -301,7 +270,7 @@ export default function App() {
             mentors={mentors}
             onBookSession={handleBookSession}
             onAddMentorSlot={handleAddMentorSlot}
-            userRole={userRole}
+            userRole="alumno"
           />
         )}
 
@@ -329,12 +298,24 @@ export default function App() {
             onAddMemeComment={handleAddMemeComment}
             onCreateMeme={handleCreateMeme}
             onSendChatMessage={handleSendChatMessage}
-            userRole={userRole}
+            userRole="alumno"
           />
         )}
       </main>
 
-      {/* Bookings & Agenda Modal */}
+      {/* Floating AI Assistant Trigger */}
+      <div className="fixed bottom-6 right-6 z-30">
+        <button
+          onClick={() => setIsAIAssistantOpen(true)}
+          className="flex items-center gap-2.5 px-4 py-3 bg-[#A3223A] hover:bg-[#8B1D31] text-white rounded-full shadow-lg hover:shadow-xl transition-all font-semibold text-xs border border-white/20 group"
+          title="Abrir Asistente IA de UBP Conecta"
+        >
+          <Bot className="w-4 h-4 transition-transform group-hover:scale-110" />
+          <span>Consultar a Pascalina IA</span>
+        </button>
+      </div>
+
+      {/* Bookings Modal */}
       <MyBookingsModal
         isOpen={isBookingsModalOpen}
         onClose={() => setIsBookingsModalOpen(false)}
@@ -342,6 +323,12 @@ export default function App() {
         registeredEvents={registeredEvents}
         onCancelBooking={handleCancelBooking}
         onUnregisterEvent={handleUnregisterEvent}
+      />
+
+      {/* Gemini AI Assistant Modal */}
+      <AIAssistantModal
+        isOpen={isAIAssistantOpen}
+        onClose={() => setIsAIAssistantOpen(false)}
       />
 
       {/* Official Footer */}

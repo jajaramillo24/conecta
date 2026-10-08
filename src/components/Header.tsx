@@ -1,25 +1,23 @@
 import React from 'react';
 import { UBPLogo } from './UBPLogo';
-import { Calendar, UserCheck, GraduationCap, School } from 'lucide-react';
+import { Calendar, Bot, Sparkles, User } from 'lucide-react';
 
 export type TabType = 'noticias' | 'eventos' | 'mentorias' | 'deportes' | 'mapa' | 'comunidad';
 
 interface HeaderProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
-  userRole: 'alumno' | 'egresado';
-  setUserRole: (role: 'alumno' | 'egresado') => void;
   bookingCount: number;
   onOpenMyBookings: () => void;
+  onOpenAIAssistant: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
-  userRole,
-  setUserRole,
   bookingCount,
   onOpenMyBookings,
+  onOpenAIAssistant,
 }) => {
   const navItems: { id: TabType; label: string }[] = [
     { id: 'noticias', label: 'Noticias' },
@@ -31,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-xs">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-2xs">
       {/* Top Bar Contract: 3 zones */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Zone 1: Single brand mark element */}
@@ -75,35 +73,17 @@ export const Header: React.FC<HeaderProps> = ({
           })}
         </nav>
 
-        {/* Zone 3: 1-2 primary actions: Role Switcher & My Bookings */}
+        {/* Zone 3: Primary actions & User profile */}
         <div className="flex items-center gap-3 shrink-0">
-          {/* Role Segmented Switcher */}
-          <div className="flex items-center p-1 bg-stone-100 rounded-lg border border-stone-200">
-            <button
-              onClick={() => setUserRole('alumno')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
-                userRole === 'alumno'
-                  ? 'bg-white text-[#A3223A] shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-              title="Ver plataforma como Estudiante UBP"
-            >
-              <School className="w-3.5 h-3.5" />
-              <span>Soy Alumno</span>
-            </button>
-            <button
-              onClick={() => setUserRole('egresado')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
-                userRole === 'egresado'
-                  ? 'bg-white text-[#A3223A] shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-              title="Ver plataforma como Graduado/a UBP"
-            >
-              <GraduationCap className="w-3.5 h-3.5" />
-              <span>Soy Egresado</span>
-            </button>
-          </div>
+          {/* AI Assistant Button */}
+          <button
+            onClick={onOpenAIAssistant}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#A3223A] bg-[#A3223A]/10 hover:bg-[#A3223A]/15 border border-[#A3223A]/20 rounded-lg transition-colors whitespace-nowrap"
+            title="Consultar al Asistente IA de UBP Conecta"
+          >
+            <Bot className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Pascalina IA</span>
+          </button>
 
           {/* Bookings shortcut button */}
           <button
@@ -119,6 +99,21 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             )}
           </button>
+
+          {/* Fixed authenticated user avatar & role label (No manual switcher) */}
+          <div className="flex items-center gap-2 pl-2 border-l border-stone-200">
+            <div className="w-7 h-7 rounded-full bg-[#A3223A] text-white flex items-center justify-center text-xs font-bold shrink-0">
+              JA
+            </div>
+            <div className="hidden xl:block text-left text-xs leading-tight">
+              <span className="font-semibold text-stone-900 block truncate max-w-[110px]">
+                Juan Andrés
+              </span>
+              <span className="text-[10px] text-stone-500 block truncate">
+                Estudiante · UBP
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
