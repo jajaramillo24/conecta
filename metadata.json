@@ -1,0 +1,6 @@
+{
+  "name": "UBP Conecta - Red de Alumnos y Egresados",
+  "description": "Plataforma oficial de vinculación entre alumnos y egresados de la Universidad Blas Pascal (UBP): mentorías Book With Me, red global de graduados, torneos de fútbol y deportes, convenios, eventos, noticias y comunidad.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
