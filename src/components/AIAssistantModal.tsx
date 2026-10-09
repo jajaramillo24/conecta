@@ -1,26 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, Sparkles, ExternalLink, RefreshCw, X, MessageSquare } from 'lucide-react';
+import { Bot, Send, Sparkles, ExternalLink, RefreshCw, X, MessageSquare, GraduationCap } from 'lucide-react';
 import { UBPLogo } from './UBPLogo';
+import { INITIAL_MENTORS } from '../data/mockData';
 
 interface Message {
   id: string;
   sender: 'user' | 'assistant';
   text: string;
-  sources?: { title: string; uri: string }[];
   timestamp: string;
 }
 
 interface AIAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelectMentor?: (mentorId: string) => void;
 }
 
-export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onClose }) => {
+export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ 
+  isOpen, 
+  onClose,
+}) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
       sender: 'assistant',
-      text: '¡Hola! Soy Pascalina, la asistente inteligente de UBP Conecta. Puedo ayudarte a encontrar graduados destacados de tu carrera, informarte sobre las mentorías Book With Me, los convenios deportivos (pádel, fútbol, alianzas con clubes) y las actividades del Campus de Argüello. ¿En qué te puedo asesorar hoy?',
+      text: '¡Hola! Soy Pascalina IA, la asistente de orientación y matching de UBP Conecta. Puedo ayudarte a redactar el temario obligatorio de 3 líneas para tu sesión, recomendarte egresados mentores según tu carrera o explicarte cómo funcionan las micro-mentorías de 30 minutos y las ferias de talento. ¿En qué te puedo asesorar hoy?',
       timestamp: 'Ahora',
     },
   ]);
@@ -29,10 +33,10 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggestedQuestions = [
-    '¿Quiénes son los egresados más destacados de Tecnología?',
-    '¿Cómo funciona el torneo de fútbol Alumnos vs Egresados?',
-    '¿Qué beneficios hay con los convenios de pádel UBP?',
-    '¿Cómo pido una mentoría con Juan Chacón o Carlos Ciravegna?',
+    '¿Cómo redacto mi objetivo de 3 líneas para pedir mentoría?',
+    '¿Quiénes son los mentores destacados de Informática y Telecomunicaciones?',
+    '¿Cómo funciona la regla de los 30 minutos y la protección del egresado?',
+    '¿Qué son las Ferias de Talento Inverso y los Jurados Alumni?',
   ];
 
   const scrollToBottom = () => {
@@ -44,6 +48,41 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
       scrollToBottom();
     }
   }, [messages, isOpen]);
+
+  // Intelligent local fallback matching UBP Conecta context
+  const generateLocalAnswer = (query: string): string => {
+    const q = query.toLowerCase();
+
+    if (q.includes('objetivo') || q.includes('3 lineas') || q.includes('temario') || q.includes('redactar')) {
+      return `📌 **Estructura recomendada para tu objetivo de 3 líneas:**\n\n1. **Tu situación actual:** Carrera que cursás y en qué etapa estás (ej: 4to año de Informática preparando CV).\n2. **Duda puntual o entregable:** Qué querés revisar con el graduado (ej: revisión de portfolio técnico o preguntas sobre requisitos de mercado).\n3. **Expectativa del encuentro:** Qué te gustaría llevarte de los 30 minutos (ej: claridad sobre salarios iniciales, contactos o sugerencias para entrevistas).\n\n*Recordá que este campo es obligatorio para que el mentor sepa exactamente qué preparar antes del encuentro.*`;
+    }
+
+    if (q.includes('informática') || q.includes('tecnología') || q.includes('software') || q.includes('chacón') || q.includes('chacon')) {
+      return `💻 **Mentores destacados en Tecnología:**\n\n- **Ing. Juan Chacón:** Co-fundador de Machinalis y Tech Director en Mercado Libre. Mentor de doingLABS UBP. Ideal para validación de MVPs técnicos e inteligencia artificial.\n- **Ing. Nazarena Bulacios:** Ganadora del Premio COPIME Nacional y Lead de Infraestructura en Enel Green Power. Excelente para tesis, energías limpias y corporaciones.\n\nPodés encontrarlos en la pestaña de **Directorio & Matching** para reservar una sesión de 30 minutos.`;
+    }
+
+    if (q.includes('telecomunicaciones') || q.includes('bulacios') || q.includes('copime')) {
+      return `📡 **Ingeniería en Telecomunicaciones:**\n\nTe recomiendo agendar con **Ing. Nazarena Bulacios** (Premio COPIME al mejor egresado de ingeniería del país, hoy en Enel Green Power). Orienta sobre formulación de tesis con impacto real, transición a energías renovables e inserción en empresas del sector.`;
+    }
+
+    if (q.includes('administración') || q.includes('marketing') || q.includes('contador') || q.includes('stang') || q.includes('negocios')) {
+      return `💼 **Mentores en Gestión & Negocios:**\n\n- **Lic. Matías Stang:** Director en Revolut (Londres), especialista en Fintech, finanzas globales y programas ISEP.\n- **Lic. Camila Benítez:** Head of Growth Marketing en Apex America.\n- **Cr. Marcos Villafañe:** Socio de Auditoría en PwC Argentina, ideal para ingresar a Big Four o práctica tributaria independiente.\n- **Lic. Florencia Valenzuela:** Fundadora de EcoTravel Patagonia (Empresa B certificada).`;
+    }
+
+    if (q.includes('30 min') || q.includes('minutos') || q.includes('burnout') || q.includes('protección') || q.includes('tiempo')) {
+      return `⏱️ **Metodología de Micro-Mentorías de 30 minutos:**\n\nPara evitar la sobrecarga (burnout) del graduado activo en el mercado:\n- Cada egresado habilita un **cupo mensual limitado** (máximo 1 o 2 bloques de 30 minutos).\n- Las sesiones duran exactamente **30 minutos**, cerradas y sin compromisos extensos.\n- El estudiante debe definir obligatoriamente su temario en 3 líneas antes de enviar la solicitud, asegurando que ambos lleguen preparados.`;
+    }
+
+    if (q.includes('feria') || q.includes('jurado') || q.includes('evento') || q.includes('flash')) {
+      return `🏛️ **Encuentros de Co-Creación UBP:**\n\n- **Ferias de Talento Inverso:** Los alumnos avanzados presentan proyectos de cátedra ante jurados de egresados que evalúan con mirada de industria.\n- **Mesas Redondas & Flash Mentoring:** Charlas relámpago virtuales o presenciales para resolver dudas masivas en 45 minutos sin sobrecargar a los mentores.\n\nPodés ver las fechas e inscribirte en la pestaña **Ferias & Eventos**.`;
+    }
+
+    if (q.includes('grupo 5') || q.includes('quiénes') || q.includes('catedra') || q.includes('innovación')) {
+      return `🎓 **Cátedra de Innovación · Turno Tarde · Grupo 5:**\n\nProyecto elaborado por los estudiantes:\n- Zoe Lobos (Administración)\n- Valeria Loza (Turismo)\n- Gonzalo Beas (Marketing)\n- Octavio López (Contador)\n- Ary German Romero (Telecomunicaciones)\n- Juan Jaramillo (Ing. Informática)\n- Santiago Juri Nam (Ing. Informática)\n- Edgar Karpowicz (Ing. Informática)\n- Valentina Rodrigues (Com. Audiovisual)`;
+    }
+
+    return `UBP Conecta articula la red de más de 20.000 egresados de la Universidad Blas Pascal con estudiantes de 3° y 4° año. Podés explorar el **Directorio de Mentores**, agendar un turno de **30 minutos** con formato presencial o virtual, o revisar el **Storyboard de 6 pasos** en la barra superior. ¿Te gustaría buscar un mentor para alguna carrera en particular?`;
+  };
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend ?? inputValue.trim();
@@ -61,6 +100,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
     setIsLoading(true);
 
     try {
+      // First attempt backend if available
       const response = await fetch('/api/assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,29 +114,31 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
       });
 
       if (!response.ok) {
-        throw new Error('Error al conectar con el servidor.');
+        throw new Error('Fallback to local assistant');
       }
 
       const data = await response.json();
       const botMessage: Message = {
         id: `assistant-${Date.now()}`,
         sender: 'assistant',
-        text: data.reply || 'No obtuve respuesta.',
-        sources: data.sources || [],
+        text: data.reply || generateLocalAnswer(text),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
       setMessages((prev) => [...prev, botMessage]);
-    } catch (err: any) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `assistant-err-${Date.now()}`,
+    } catch {
+      // Graceful local intelligence fallback for static deployments (e.g. GitHub Pages)
+      setTimeout(() => {
+        const botMessage: Message = {
+          id: `assistant-${Date.now()}`,
           sender: 'assistant',
-          text: 'Ocurrió una pausa en la conexión con el servicio. Podés consultar directamente los horarios en la sección de Mentorías o inscribirte en el Torneo de Fútbol desde la pestaña de Deportes.',
+          text: generateLocalAnswer(text),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
+        };
+        setMessages((prev) => [...prev, botMessage]);
+        setIsLoading(false);
+      }, 400);
+      return;
     } finally {
       setIsLoading(false);
     }
@@ -105,39 +147,36 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl border border-stone-200 max-w-xl w-full h-[620px] shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+      <div className="bg-white rounded-2xl border border-stone-200 max-w-xl w-full h-[85vh] max-h-[640px] flex flex-col shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="p-4 bg-stone-900 text-white flex items-center justify-between border-b border-stone-800">
+        <div className="p-4 sm:p-5 bg-linear-to-r from-[#8B1D31] to-[#A3223A] text-white flex items-center justify-between shrink-0 shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#A3223A] flex items-center justify-center text-white font-bold">
+            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-amber-300">
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold tracking-tight text-white">
-                  Pascalina · Asistente IA
-                </h3>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-mono px-1.5 py-0.2 rounded-sm border border-emerald-500/30">
-                  Gemini 3.5 Flash
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-bold text-sm text-white">Pascalina IA</h3>
+                <span className="text-[10px] px-1.5 py-0.2 bg-white/20 rounded font-semibold text-amber-200 uppercase">
+                  Copiloto UBP
                 </span>
               </div>
-              <p className="font-lema italic text-[11px] text-stone-400 leading-none mt-0.5">
-                Saber y Saber Hacer · Centro de Graduados UBP
+              <p className="text-[11px] text-stone-200">
+                Orientación en matching, temario de 3 líneas y agenda UBP Conecta
               </p>
             </div>
           </div>
-
           <button
             onClick={onClose}
-            className="p-1.5 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition-colors"
+            className="text-white/80 hover:text-white p-1 rounded-md text-lg font-bold"
           >
-            <X className="w-5 h-5" />
+            ✕
           </button>
         </div>
 
         {/* Messages Stream */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-50">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs bg-stone-50/50">
           {messages.map((m) => (
             <div
               key={m.id}
@@ -146,67 +185,53 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
               }`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed shadow-2xs ${
+                className={`max-w-[85%] rounded-2xl p-3.5 space-y-1 ${
                   m.sender === 'user'
-                    ? 'bg-[#A3223A] text-white rounded-tr-xs'
-                    : 'bg-white text-stone-800 border border-stone-200/80 rounded-tl-xs'
+                    ? 'bg-[#A3223A] text-white rounded-tr-xs shadow-xs'
+                    : 'bg-white text-stone-800 border border-stone-200 rounded-tl-xs shadow-2xs'
                 }`}
               >
-                <p className="whitespace-pre-line">{m.text}</p>
-
-                {/* Google Search Grounding Sources */}
-                {m.sources && m.sources.length > 0 && (
-                  <div className="mt-3 pt-2 border-t border-stone-100 space-y-1">
-                    <span className="text-[10px] font-semibold text-stone-400 block uppercase tracking-wider">
-                      Fuentes verificadas en Google:
-                    </span>
-                    <div className="space-y-1">
-                      {m.sources.map((s, idx) => (
-                        <a
-                          key={idx}
-                          href={s.uri}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1 text-[11px] text-[#A3223A] hover:underline truncate"
-                        >
-                          <ExternalLink className="w-3 h-3 shrink-0" />
-                          <span className="truncate">{s.title}</span>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <div className="whitespace-pre-line leading-relaxed font-sans">
+                  {m.text}
+                </div>
+                <div
+                  className={`text-[9px] text-right font-mono ${
+                    m.sender === 'user' ? 'text-stone-200' : 'text-stone-400'
+                  }`}
+                >
+                  {m.timestamp}
+                </div>
               </div>
-              <span className="text-[10px] text-stone-400 mt-1 px-1 font-mono">
-                {m.timestamp}
-              </span>
             </div>
           ))}
 
           {isLoading && (
-            <div className="flex items-center gap-2 text-xs text-stone-500 bg-white p-3 rounded-xl border border-stone-200 max-w-xs shadow-2xs">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#A3223A]" />
-              <span>Consultando información con Gemini y Google Search...</span>
+            <div className="flex items-center gap-2 text-stone-400 text-xs pl-2">
+              <div className="w-2 h-2 rounded-full bg-[#A3223A] animate-bounce" />
+              <div className="w-2 h-2 rounded-full bg-[#A3223A] animate-bounce [animation-delay:0.2s]" />
+              <div className="w-2 h-2 rounded-full bg-[#A3223A] animate-bounce [animation-delay:0.4s]" />
+              <span className="text-[11px] ml-1">Pascalina está redactando...</span>
             </div>
           )}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Suggestion Prompts */}
-        {messages.length <= 3 && (
-          <div className="px-4 py-2 bg-white border-t border-stone-100 flex items-center gap-2 overflow-x-auto scrollbar-none">
-            {suggestedQuestions.map((q, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSendMessage(q)}
-                className="whitespace-nowrap px-2.5 py-1 text-[11px] font-medium bg-stone-100 hover:bg-[#A3223A]/10 hover:text-[#A3223A] text-stone-700 rounded-md transition-colors"
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Suggested Quick Prompts */}
+        <div className="p-2.5 bg-white border-t border-stone-200 overflow-x-auto flex items-center gap-1.5 scrollbar-none shrink-0">
+          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider pl-1 shrink-0">
+            Sugerencias:
+          </span>
+          {suggestedQuestions.map((q, i) => (
+            <button
+              key={i}
+              onClick={() => handleSendMessage(q)}
+              className="px-2.5 py-1 bg-stone-100 hover:bg-[#A3223A]/10 hover:text-[#A3223A] text-stone-700 text-[11px] rounded-full whitespace-nowrap transition-colors font-medium shrink-0"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
 
         {/* Input Bar */}
         <form
@@ -214,21 +239,22 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
             e.preventDefault();
             handleSendMessage();
           }}
-          className="p-3 bg-white border-t border-stone-200 flex items-center gap-2"
+          className="p-3 bg-white border-t border-stone-200 flex items-center gap-2 shrink-0"
         >
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Preguntale a Pascalina sobre egresados, mentorías o torneos..."
+            placeholder="Preguntale a Pascalina cómo pedir tu mentoría o redactar el temario..."
             className="flex-1 px-3.5 py-2 text-xs bg-stone-50 border border-stone-200 rounded-lg focus:outline-hidden focus:border-[#A3223A] focus:bg-white"
           />
           <button
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="p-2 bg-[#A3223A] hover:bg-[#8B1D31] text-white rounded-lg transition-colors disabled:opacity-40"
+            className="px-4 py-2 bg-[#A3223A] hover:bg-[#8B1D31] disabled:bg-stone-200 disabled:text-stone-400 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
           >
-            <Send className="w-4 h-4" />
+            <span>Enviar</span>
+            <Send className="w-3.5 h-3.5" />
           </button>
         </form>
       </div>

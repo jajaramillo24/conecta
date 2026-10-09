@@ -80,8 +80,11 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Bar */}
         <div className="pt-8 mt-8 border-t border-stone-800 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-4">
-          <p>© {new Date().getFullYear()} Universidad Blas Pascal. Todos los derechos reservados.</p>
-          <div className="flex items-center gap-4 text-stone-400">
+          <div>
+            <p className="font-semibold text-stone-400">© {new Date().getFullYear()} Universidad Blas Pascal · Cátedra de Innovación (Grupo 5 - Turno Tarde)</p>
+            <p className="text-[11px] text-stone-500">TP Integrador: UBP Conecta · Red Adaptativa de Mentoría y Vinculación Profesional</p>
+          </div>
+          <div className="flex items-center gap-4 text-stone-400 text-[11px]">
             <span>Argüello · Córdoba</span>
             <span aria-hidden="true">·</span>
             <span>MiUBP Alumnos</span>

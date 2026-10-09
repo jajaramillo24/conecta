@@ -1,93 +1,66 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState } from 'react';
 import { Header, TabType } from './components/Header';
-import { NewsSection } from './components/NewsSection';
+import { DashboardSection } from './components/DashboardSection';
+import { MentorDirectorySection } from './components/MentorDirectorySection';
+import { BookingModal } from './components/BookingModal';
+import { SessionsManagementSection } from './components/SessionsManagementSection';
 import { EventsSection } from './components/EventsSection';
-import { MentorshipSection } from './components/MentorshipSection';
-import { SportsSection } from './components/SportsSection';
-import { AlumniMapSection } from './components/AlumniMapSection';
-import { CommunitySection } from './components/CommunitySection';
-import { MyBookingsModal } from './components/MyBookingsModal';
+import { StoryboardSection } from './components/StoryboardSection';
 import { AIAssistantModal } from './components/AIAssistantModal';
 import { Footer } from './components/Footer';
 import {
-  INITIAL_ALUMNI,
   INITIAL_MENTORS,
+  INITIAL_BOOKINGS,
   INITIAL_EVENTS,
-  INITIAL_NEWS,
-  INITIAL_CONVENIOS,
-  INITIAL_TOURNAMENT_TEAMS,
-  INITIAL_MATCHES,
-  INITIAL_MEMES,
-  INITIAL_CHAT_MESSAGES,
 } from './data/mockData';
-import { MentorshipBooking, UbpMeme, ChatMessage } from './types';
-import { ArrowRight, Bot, Sparkles } from 'lucide-react';
+import { Mentor, MentorshipBooking, EventItem, CareerId, ActiveRole, SessionReview } from './types';
+import { Bot, Sparkles, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('noticias');
+  const [activeTab, setActiveTab] = useState<TabType>('inicio');
+  const [userRole, setUserRole] = useState<ActiveRole>('estudiante');
 
-  // App data state
-  const [news] = useState(INITIAL_NEWS);
-  const [events, setEvents] = useState(INITIAL_EVENTS);
-  const [mentors, setMentors] = useState(INITIAL_MENTORS);
-  const [alumniList] = useState(INITIAL_ALUMNI);
-  const [convenios] = useState(INITIAL_CONVENIOS);
-  const [teams, setTeams] = useState(INITIAL_TOURNAMENT_TEAMS);
-  const [matches] = useState(INITIAL_MATCHES);
-  const [memes, setMemes] = useState<UbpMeme[]>(INITIAL_MEMES);
-  const [chatMessages, setChatMessages] = useState<Record<string, ChatMessage[]>>(INITIAL_CHAT_MESSAGES);
+  // Application Data State
+  const [mentors, setMentors] = useState<Mentor[]>(INITIAL_MENTORS);
+  const [bookings, setBookings] = useState<MentorshipBooking[]>(INITIAL_BOOKINGS);
+  const [events, setEvents] = useState<EventItem[]>(INITIAL_EVENTS);
 
-  // User agenda state
-  const [bookings, setBookings] = useState<MentorshipBooking[]>([
-    {
-      id: 'demo-booking-1',
-      mentorId: 'm-juan-chacon',
-      mentorName: 'Juan Chacón',
-      mentorRole: 'Co-Fundador de Machinalis & Tech Director en Mercado Libre',
-      studentName: 'Juan Andrés',
-      studentEmail: 'j.andres@alumnos.ubp.edu.ar',
-      studentCareer: 'Ingeniería en Informática',
-      date: '2026-10-14',
-      time: '18:00 - 18:45',
-      modality: 'Virtual (Google Meet)',
-      note: 'Consulta sobre validación de primer MVP para incubar en doingLABS UBP.',
-      status: 'confirmada',
-      createdAt: new Date().toISOString(),
-    },
-  ]);
-  const [isBookingsModalOpen, setIsBookingsModalOpen] = useState(false);
+  // Directory filter handover from Dashboard search
+  const [directorySearchQuery, setDirectorySearchQuery] = useState<string>('');
+  const [directoryCareerFilter, setDirectoryCareerFilter] = useState<CareerId | undefined>(undefined);
+
+  // Active Modals
+  const [activeBookingMentor, setActiveBookingMentor] = useState<Mentor | null>(null);
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [isOfferSlotModalOpen, setIsOfferSlotModalOpen] = useState(false);
 
-  // Toggle event registration
-  const handleToggleEventRegistration = (eventId: string) => {
-    setEvents((prev) =>
-      prev.map((ev) => {
-        if (ev.id !== eventId) return ev;
-        const newRegistered = !ev.registered;
-        return {
-          ...ev,
-          registered: newRegistered,
-          spotsLeft: newRegistered ? Math.max(0, ev.spotsLeft - 1) : ev.spotsLeft + 1,
-        };
-      })
-    );
+  // New slot form state for alumni
+  const [offerSlotDay, setOfferSlotDay] = useState('2026-10-28');
+  const [offerSlotTime, setOfferSlotTime] = useState('18:00 - 18:30');
+
+  // Handlers for Navigation with search filters
+  const handleNavigateToDirectorio = (search?: string, career?: CareerId) => {
+    setDirectorySearchQuery(search || '');
+    setDirectoryCareerFilter(career);
+    setActiveTab('directorio');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Add a new booked mentorship
-  const handleBookSession = (newBooking: Omit<MentorshipBooking, 'id' | 'createdAt'>) => {
+  const handleOpenBooking = (mentor: Mentor) => {
+    setActiveBookingMentor(mentor);
+  };
+
+  // Add booked mentorship session (30 min fixed)
+  const handleConfirmBooking = (newBooking: Omit<MentorshipBooking, 'id' | 'createdAt'>) => {
     const bookingWithId: MentorshipBooking = {
       ...newBooking,
       id: `booking-${Date.now()}`,
       createdAt: new Date().toISOString(),
     };
+
     setBookings((prev) => [bookingWithId, ...prev]);
 
-    // Mark slot as booked in mentor list
+    // Mark slot as booked for that mentor
     setMentors((prev) =>
       prev.map((m) => {
         if (m.id !== newBooking.mentorId) return m;
@@ -108,156 +81,151 @@ export default function App() {
     setBookings((prev) => prev.filter((b) => b.id !== bookingId));
   };
 
-  // Unregister from event
-  const handleUnregisterEvent = (eventId: string) => {
-    handleToggleEventRegistration(eventId);
-  };
-
-  // Add free player in soccer tournament
-  const handleRegisterFreePlayer = (playerName: string, career: string, role: string) => {
-    setTeams((prev) => [
-      ...prev,
-      {
-        id: `t-free-${Date.now()}`,
-        name: `${playerName} (${career} - Libre)`,
-        type: role === 'Egresados' ? 'Egresados' : 'Alumnos',
-        career: career,
-        points: 0,
-        played: 0,
-        won: 0,
-        drawn: 0,
-        lost: 0,
-        goalsFor: 0,
-        goalsAgainst: 0,
-      },
-    ]);
-  };
-
-  // Upvote meme
-  const handleUpvoteMeme = (memeId: string) => {
-    setMemes((prev) =>
-      prev.map((m) => {
-        if (m.id !== memeId) return m;
-        const hasUpvoted = m.hasUpvoted;
+  // Toggle Event Registration
+  const handleToggleEventRegistration = (eventId: string) => {
+    setEvents((prev) =>
+      prev.map((ev) => {
+        if (ev.id !== eventId) return ev;
+        const newRegistered = !ev.registered;
         return {
-          ...m,
-          hasUpvoted: !hasUpvoted,
-          upvotes: hasUpvoted ? m.upvotes - 1 : m.upvotes + 1,
+          ...ev,
+          registered: newRegistered,
+          spotsLeft: newRegistered ? Math.max(0, ev.spotsLeft - 1) : ev.spotsLeft + 1,
         };
       })
     );
   };
 
-  // Add meme comment
-  const handleAddMemeComment = (memeId: string, text: string, userName: string) => {
-    setMemes((prev) =>
+  // Update booking status (e.g. pending -> confirmed -> completed)
+  const handleUpdateBookingStatus = (bookingId: string, status: MentorshipBooking['status']) => {
+    setBookings((prev) =>
+      prev.map((b) => (b.id === bookingId ? { ...b, status } : b))
+    );
+  };
+
+  // Submit post-session mutual review (Step 6 of Storyboard)
+  const handleSubmitReview = (bookingId: string, review: SessionReview) => {
+    setBookings((prev) =>
+      prev.map((b) => (b.id === bookingId ? { ...b, review, status: 'completada' } : b))
+    );
+  };
+
+  // Add mentor slot (for alumni role)
+  const handleAddAlumniSlot = (e: React.FormEvent) => {
+    e.preventDefault();
+    const chaconId = 'm-juan-chacon';
+    setMentors((prev) =>
       prev.map((m) => {
-        if (m.id !== memeId) return m;
+        if (m.id !== chaconId) return m;
         return {
           ...m,
-          commentsCount: m.commentsCount + 1,
-          comments: [
-            ...m.comments,
-            { user: userName, text, time: 'Recién' },
+          availableSlots: [
+            ...m.availableSlots,
+            { id: `slot-${Date.now()}`, day: offerSlotDay, time: offerSlotTime, available: true },
           ],
         };
       })
     );
+    setIsOfferSlotModalOpen(false);
   };
-
-  // Create meme
-  const handleCreateMeme = (newMeme: Omit<UbpMeme, 'id' | 'upvotes' | 'commentsCount' | 'comments' | 'date'>) => {
-    const created: UbpMeme = {
-      ...newMeme,
-      id: `meme-${Date.now()}`,
-      upvotes: 1,
-      hasUpvoted: true,
-      commentsCount: 0,
-      comments: [],
-      date: 'Recién publicado',
-    };
-    setMemes((prev) => [created, ...prev]);
-  };
-
-  // Send chat message
-  const handleSendChatMessage = (channelId: string, text: string) => {
-    const newMsg: ChatMessage = {
-      id: `chat-${Date.now()}`,
-      channelId,
-      senderName: 'Juan Andrés',
-      senderRole: 'Alumno',
-      senderCareer: 'tecnologia',
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      avatarSeed: 'JuanAndres',
-    };
-
-    setChatMessages((prev) => ({
-      ...prev,
-      [channelId]: [...(prev[channelId] ?? []), newMsg],
-    }));
-  };
-
-  // Add mentor slot
-  const handleAddMentorSlot = (mentorId: string, day: string, time: string) => {
-    setMentors((prev) =>
-      prev.map((m) => {
-        if (m.id !== mentorId) return m;
-        return {
-          ...m,
-          availableSlots: [...m.availableSlots, { day, time, available: true }],
-        };
-      })
-    );
-  };
-
-  const handleOpenMentorshipForAlumni = (alumniName: string) => {
-    setActiveTab('mentorias');
-  };
-
-  const registeredEvents = events.filter((e) => e.registered);
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900">
-      {/* Official Top Bar */}
+    <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900 selection:bg-[#A3223A]/10 selection:text-[#A3223A]">
+      {/* 1. Header Oficial UBP Conecta */}
       <Header
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        bookingCount={bookings.length + registeredEvents.length}
-        onOpenMyBookings={() => setIsBookingsModalOpen(true)}
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        bookingCount={bookings.length}
+        userRole={userRole}
+        setUserRole={setUserRole}
         onOpenAIAssistant={() => setIsAIAssistantOpen(true)}
       />
 
-      {/* Campus Announcement Ribbon */}
-      <div className="bg-[#A3223A] text-white py-2 px-4 text-xs">
+      {/* 2. Ribbon Institucional de Vinculación y Ferias */}
+      <div className="bg-[#8B1D31] text-white py-2 px-4 text-xs shadow-2xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2 font-medium">
-            <span className="bg-white/20 px-2 py-0.5 rounded-sm font-bold uppercase tracking-wider text-[10px]">
-              Copa Blas Pascal
+            <span className="bg-white/20 px-2 py-0.5 rounded-sm font-black uppercase tracking-wider text-[10px] text-amber-200">
+              Co-Creación UBP
             </span>
             <span className="truncate">
-              Inscripciones abiertas para el Torneo de Fútbol Alumnos vs. Egresados en el Campus de Argüello.
+              Inscripciones abiertas para la <strong>Feria de Talento Inverso</strong> y evaluación de proyectos finales con graduados.
             </span>
           </div>
           <button
-            onClick={() => setActiveTab('deportes')}
-            className="text-white underline hover:opacity-80 font-semibold whitespace-nowrap flex items-center gap-1 shrink-0"
+            onClick={() => {
+              setActiveTab('eventos');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="text-amber-200 hover:text-white underline font-bold whitespace-nowrap flex items-center gap-1 shrink-0"
           >
-            <span>Ver Fixture & Convenios</span>
-            <ArrowRight className="w-3 h-3" />
+            <span>Ver Ferias & Encuentros Híbridos</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Main Content Viewport */}
+      {/* 3. Main Content Router */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        {activeTab === 'noticias' && (
-          <NewsSection
-            news={news}
-            onOpenMentorshipForAlumni={handleOpenMentorshipForAlumni}
+        {/* Vista 1: Pantalla de Inicio / Dashboard Principal */}
+        {activeTab === 'inicio' && (
+          <DashboardSection
+            mentors={mentors}
+            events={events}
+            userRole={userRole}
+            setUserRole={setUserRole}
+            onNavigateToDirectorio={handleNavigateToDirectorio}
+            onNavigateToSesiones={() => {
+              setActiveTab('sesiones');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateToEventos={() => {
+              setActiveTab('eventos');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onNavigateToStoryboard={() => {
+              setActiveTab('storyboard');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onBookMentor={handleOpenBooking}
+            onOpenAIAssistant={() => setIsAIAssistantOpen(true)}
+            confirmedBookingsCount={bookings.filter((b) => b.status === 'confirmada').length}
           />
         )}
 
+        {/* Vista 2: Directorio y Filtro de Mentores (Módulo de Matching) */}
+        {activeTab === 'directorio' && (
+          <MentorDirectorySection
+            mentors={mentors}
+            onBookMentor={handleOpenBooking}
+            userRole={userRole}
+            initialSearch={directorySearchQuery}
+            initialCareer={directoryCareerFilter}
+            onOpenOfferSlotModal={() => setIsOfferSlotModalOpen(true)}
+          />
+        )}
+
+        {/* Vista 4: Panel de Gestión de Sesiones y Red (Mis Conexiones) */}
+        {activeTab === 'sesiones' && (
+          <SessionsManagementSection
+            bookings={bookings}
+            events={events}
+            userRole={userRole}
+            onCancelBooking={handleCancelBooking}
+            onUnregisterEvent={handleToggleEventRegistration}
+            onUpdateBookingStatus={handleUpdateBookingStatus}
+            onSubmitReview={handleSubmitReview}
+            onNavigateToDirectorio={() => {
+              setActiveTab('directorio');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        )}
+
+        {/* Dimensión Híbrida: Eventos, Ferias de Talento Inverso y Flash Mentoring */}
         {activeTab === 'eventos' && (
           <EventsSection
             events={events}
@@ -265,73 +233,139 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'mentorias' && (
-          <MentorshipSection
-            mentors={mentors}
-            onBookSession={handleBookSession}
-            onAddMentorSlot={handleAddMentorSlot}
-            userRole="alumno"
-          />
-        )}
-
-        {activeTab === 'deportes' && (
-          <SportsSection
-            teams={teams}
-            matches={matches}
-            convenios={convenios}
-            onRegisterFreePlayer={handleRegisterFreePlayer}
-          />
-        )}
-
-        {activeTab === 'mapa' && (
-          <AlumniMapSection
-            alumniList={alumniList}
-            onOpenMentorshipForAlumni={handleOpenMentorshipForAlumni}
-          />
-        )}
-
-        {activeTab === 'comunidad' && (
-          <CommunitySection
-            memes={memes}
-            chatMessages={chatMessages}
-            onUpvoteMeme={handleUpvoteMeme}
-            onAddMemeComment={handleAddMemeComment}
-            onCreateMeme={handleCreateMeme}
-            onSendChatMessage={handleSendChatMessage}
-            userRole="alumno"
+        {/* Storyboard del Viaje del Usuario & Metodología de Innovación */}
+        {activeTab === 'storyboard' && (
+          <StoryboardSection
+            onGoToDirectory={() => {
+              setActiveTab('directorio');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onGoToSessions={() => {
+              setActiveTab('sesiones');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           />
         )}
       </main>
 
-      {/* Floating AI Assistant Trigger */}
+      {/* Floating Copilot Button */}
       <div className="fixed bottom-6 right-6 z-30">
         <button
           onClick={() => setIsAIAssistantOpen(true)}
-          className="flex items-center gap-2.5 px-4 py-3 bg-[#A3223A] hover:bg-[#8B1D31] text-white rounded-full shadow-lg hover:shadow-xl transition-all font-semibold text-xs border border-white/20 group"
-          title="Abrir Asistente IA de UBP Conecta"
+          className="flex items-center gap-2.5 px-4 py-3 bg-[#A3223A] hover:bg-[#8B1D31] text-white rounded-full shadow-xl hover:shadow-2xl transition-all font-bold text-xs border border-white/20 group hover:scale-105"
+          title="Consultar a Pascalina IA (Matching y temario de 3 líneas)"
         >
-          <Bot className="w-4 h-4 transition-transform group-hover:scale-110" />
+          <Bot className="w-4 h-4 text-amber-300 transition-transform group-hover:rotate-12" />
           <span>Consultar a Pascalina IA</span>
         </button>
       </div>
 
-      {/* Bookings Modal */}
-      <MyBookingsModal
-        isOpen={isBookingsModalOpen}
-        onClose={() => setIsBookingsModalOpen(false)}
-        bookings={bookings}
-        registeredEvents={registeredEvents}
-        onCancelBooking={handleCancelBooking}
-        onUnregisterEvent={handleUnregisterEvent}
+      {/* Vista 3: Módulo de Agendamiento Modular (Micro-Mentoring 30 min) */}
+      <BookingModal
+        mentor={activeBookingMentor}
+        isOpen={Boolean(activeBookingMentor)}
+        onClose={() => setActiveBookingMentor(null)}
+        onConfirmBooking={handleConfirmBooking}
+        onViewMyBookings={() => {
+          setActiveBookingMentor(null);
+          setActiveTab('sesiones');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
       />
 
-      {/* Gemini AI Assistant Modal */}
+      {/* Modal: Habilitar Cupos Mensuales de Mentoría (Perspectiva Egresado) */}
+      {isOfferSlotModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-stone-200 max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-start justify-between border-b border-stone-100 pb-3">
+              <div>
+                <span className="text-[10px] font-bold text-[#A3223A] uppercase tracking-wider">
+                  Gestión de Disponibilidad · Egresado
+                </span>
+                <h3 className="text-lg font-bold text-stone-900 mt-0.5">
+                  Habilitar Cupo de Micro-Mentoría
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsOfferSlotModalOpen(false)}
+                className="text-stone-400 hover:text-stone-700 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+              <span>
+                Para proteger tu tiempo laboral, el sistema permite habilitar <strong>máximo 1 o 2 bloques de 30 minutos al mes</strong>.
+              </span>
+            </div>
+
+            <form onSubmit={handleAddAlumniSlot} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
+                  Fecha del bloque
+                </label>
+                <input
+                  type="date"
+                  value={offerSlotDay}
+                  onChange={(e) => setOfferSlotDay(e.target.value)}
+                  className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-[#A3223A] focus:outline-hidden"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
+                  Horario de 30 minutos
+                </label>
+                <select
+                  value={offerSlotTime}
+                  onChange={(e) => setOfferSlotTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-[#A3223A] focus:outline-hidden font-mono"
+                >
+                  <option value="17:00 - 17:30">17:00 - 17:30 hs</option>
+                  <option value="17:30 - 18:00">17:30 - 18:00 hs</option>
+                  <option value="18:00 - 18:30">18:00 - 18:30 hs</option>
+                  <option value="18:30 - 19:00">18:30 - 19:00 hs</option>
+                  <option value="19:00 - 19:30">19:00 - 19:30 hs</option>
+                </select>
+              </div>
+
+              <div className="pt-2 border-t border-stone-200 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsOfferSlotModalOpen(false)}
+                  className="px-3.5 py-2 text-stone-600 font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#A3223A] text-white font-bold rounded-lg hover:bg-[#8B1D31]"
+                >
+                  Habilitar Cupo (30 min)
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Asistente Pascalina IA */}
       <AIAssistantModal
         isOpen={isAIAssistantOpen}
         onClose={() => setIsAIAssistantOpen(false)}
+        onSelectMentor={(mentorId) => {
+          const mentor = mentors.find((m) => m.id === mentorId);
+          if (mentor) {
+            setIsAIAssistantOpen(false);
+            setActiveBookingMentor(mentor);
+          }
+        }}
       />
 
-      {/* Official Footer */}
+      {/* Footer Oficial */}
       <Footer />
     </div>
   );
