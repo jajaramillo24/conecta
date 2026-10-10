@@ -3,7 +3,7 @@ import { UBPLogo } from './UBPLogo';
 import { Calendar, Bot, Clock, Sparkles, User, GraduationCap, Compass, BookOpen } from 'lucide-react';
 import { ActiveRole } from '../types';
 
-export type TabType = 'inicio' | 'directorio' | 'sesiones' | 'eventos' | 'storyboard';
+export type TabType = 'inicio' | 'directorio' | 'sesiones' | 'eventos';
 
 interface HeaderProps {
   activeTab: TabType;
@@ -24,10 +24,9 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const navItems: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'inicio', label: 'Inicio', icon: <Compass className="w-4 h-4" /> },
-    { id: 'directorio', label: 'Directorio & Matching', icon: <GraduationCap className="w-4 h-4" /> },
+    { id: 'directorio', label: 'Directorio de Mentores', icon: <GraduationCap className="w-4 h-4" /> },
     { id: 'sesiones', label: 'Mis Conexiones', icon: <Clock className="w-4 h-4" /> },
     { id: 'eventos', label: 'Ferias & Eventos', icon: <Calendar className="w-4 h-4" /> },
-    { id: 'storyboard', label: 'Storyboard & TP', icon: <BookOpen className="w-4 h-4" /> },
   ];
 
   return (

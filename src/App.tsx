@@ -5,7 +5,6 @@ import { MentorDirectorySection } from './components/MentorDirectorySection';
 import { BookingModal } from './components/BookingModal';
 import { SessionsManagementSection } from './components/SessionsManagementSection';
 import { EventsSection } from './components/EventsSection';
-import { StoryboardSection } from './components/StoryboardSection';
 import { AIAssistantModal } from './components/AIAssistantModal';
 import { Footer } from './components/Footer';
 import {
@@ -186,10 +185,6 @@ export default function App() {
               setActiveTab('eventos');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            onNavigateToStoryboard={() => {
-              setActiveTab('storyboard');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
             onBookMentor={handleOpenBooking}
             onOpenAIAssistant={() => setIsAIAssistantOpen(true)}
             confirmedBookingsCount={bookings.filter((b) => b.status === 'confirmada').length}
@@ -230,20 +225,6 @@ export default function App() {
           <EventsSection
             events={events}
             onToggleEventRegistration={handleToggleEventRegistration}
-          />
-        )}
-
-        {/* Storyboard del Viaje del Usuario & Metodología de Innovación */}
-        {activeTab === 'storyboard' && (
-          <StoryboardSection
-            onGoToDirectory={() => {
-              setActiveTab('directorio');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            onGoToSessions={() => {
-              setActiveTab('sesiones');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
           />
         )}
       </main>

@@ -27,7 +27,6 @@ interface DashboardSectionProps {
   onNavigateToDirectorio: (search?: string, career?: CareerId) => void;
   onNavigateToSesiones: () => void;
   onNavigateToEventos: () => void;
-  onNavigateToStoryboard: () => void;
   onBookMentor: (mentor: Mentor) => void;
   onOpenAIAssistant: () => void;
   confirmedBookingsCount: number;
@@ -41,7 +40,6 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
   onNavigateToDirectorio,
   onNavigateToSesiones,
   onNavigateToEventos,
-  onNavigateToStoryboard,
   onBookMentor,
   onOpenAIAssistant,
   confirmedBookingsCount,
@@ -218,49 +216,49 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
         </div>
       </section>
 
-      {/* 2. Validación de Hipótesis y Métricas Clave del Prototipo */}
+      {/* 2. Pilares de la Plataforma UBP Conecta */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-2xs hover:border-[#A3223A]/30 transition-colors">
           <div className="flex items-center justify-between text-stone-500 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Flujo Crítico</span>
-            <Clock className="w-4 h-4 text-[#A3223A]" />
+            <span className="text-xs font-semibold uppercase tracking-wider">Comunidad Alumni</span>
+            <Users className="w-4 h-4 text-[#A3223A]" />
           </div>
-          <div className="text-2xl font-black text-stone-900">&lt; 3 minutos</div>
+          <div className="text-2xl font-black text-stone-900">+20.000</div>
           <p className="text-[11px] text-stone-500 mt-1">
-            4 pasos simples desde el descubrimiento hasta el agendamiento guiado.
+            Graduados pascalinos en Argentina y el mundo dispuestos a colaborar.
           </p>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-2xs hover:border-[#A3223A]/30 transition-colors">
           <div className="flex items-center justify-between text-stone-500 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Micro-Mentoring</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span className="text-xs font-semibold uppercase tracking-wider">Micro-Mentorías</span>
+            <Clock className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-black text-stone-900">30 min / cupo</div>
+          <div className="text-2xl font-black text-stone-900">30 min / sesión</div>
           <p className="text-[11px] text-stone-500 mt-1">
-            Bloques fijos y dosificados que previenen la fatiga del egresado.
+            Encuentros ágiles 1 a 1 orientados a dudas concretas y revisión de perfil.
           </p>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-2xs hover:border-[#A3223A]/30 transition-colors">
           <div className="flex items-center justify-between text-stone-500 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Temario Previo</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Agenda con Foco</span>
             <CheckCircle2 className="w-4 h-4 text-blue-600" />
           </div>
-          <div className="text-2xl font-black text-stone-900">100% Obligatorio</div>
+          <div className="text-2xl font-black text-stone-900">Temario Previo</div>
           <p className="text-[11px] text-stone-500 mt-1">
-            Campo guiado de 3 líneas con el objetivo de la sesión antes de confirmar.
+            Objetivos claros definidos por el estudiante para maximizar el encuentro.
           </p>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-2xs hover:border-[#A3223A]/30 transition-colors">
           <div className="flex items-center justify-between text-stone-500 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wider">Modalidad</span>
-            <Users className="w-4 h-4 text-amber-600" />
+            <ShieldCheck className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-2xl font-black text-stone-900">100% Híbrida</div>
           <p className="text-[11px] text-stone-500 mt-1">
-            Google Meet para estudiantes remotos o Campus Argüello para cara a cara.
+            Google Meet para alumnos a distancia o presencial en Campus Argüello.
           </p>
         </div>
       </section>
@@ -492,34 +490,34 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
         </div>
       </section>
 
-      {/* 5. Banner Metodológico: Storyboard y Cátedra de Innovación */}
+      {/* 5. Asistencia & Copiloto Pascalina */}
       <section className="bg-stone-100 rounded-2xl border border-stone-300/80 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#A3223A] uppercase tracking-wider">
-            <BookOpen className="w-4 h-4" />
-            <span>Fundamentación del Proyecto · Design Thinking</span>
+            <Sparkles className="w-4 h-4" />
+            <span>Asistencia Vocacional & Matching</span>
           </div>
           <h3 className="text-xl font-bold text-stone-900">
-            Conocé el Storyboard del Viaje del Usuario & Las 4 Dimensiones de Validación
+            ¿Tenés dudas sobre cómo preparar tu sesión o qué mentor elegir?
           </h3>
           <p className="text-xs text-stone-600 max-w-2xl leading-relaxed">
-            Revisá la narrativa de 6 momentos clave (desde la incertidumbre inicial hasta la evaluación recíproca) y las hipótesis empíricas testeadas con estudiantes y egresados de la Universidad Blas Pascal.
+            Pascalina IA te ayuda a estructurar tus preguntas en 3 puntos clave, identificar graduados con experiencia en tu sector y aprovechar al máximo cada minuto de tu encuentro.
           </p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
           <button
-            onClick={onNavigateToStoryboard}
+            onClick={() => onNavigateToDirectorio()}
             className="px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
           >
-            <span>Ver Storyboard & Hipótesis</span>
+            <span>Explorar Directorio</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={onOpenAIAssistant}
-            className="px-3.5 py-2.5 bg-white hover:bg-stone-50 border border-stone-300 text-stone-800 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5"
+            className="px-3.5 py-2.5 bg-[#A3223A] hover:bg-[#8B1D31] text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-xs"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#A3223A]" />
+            <Bot className="w-3.5 h-3.5 text-amber-300" />
             <span>Consultar a Pascalina IA</span>
           </button>
         </div>

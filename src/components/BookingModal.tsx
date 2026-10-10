@@ -200,7 +200,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               <div>
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#A3223A]">
                   <Clock className="w-3.5 h-3.5" />
-                  <span>Módulo de Agendamiento Modular · 30 min</span>
+                  <span>Reserva de Sesión · 30 min</span>
                 </div>
                 <h2 className="text-xl font-extrabold text-stone-900 mt-0.5">
                   Solicitar Sesión con {mentor.name}
@@ -218,11 +218,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               </button>
             </div>
 
-            {/* Anti-burnout & 30-min notice (Página 17 del Documento) */}
+            {/* Duración y Foco */}
             <div className="bg-amber-50/80 border border-amber-200/80 rounded-lg p-3 flex items-start gap-2.5 text-xs text-amber-900">
               <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
               <div className="leading-snug">
-                <strong>Protección de disponibilidad:</strong> Sesión estructurada de <strong>30 minutos</strong> con temario obligatorio. El mentor conoce la agenda con antelación, garantizando un intercambio puntual y de alto valor.
+                <strong>Encuentro de 30 minutos:</strong> Las sesiones tienen una duración fijada de media hora con temario previo, garantizando un intercambio puntual, estructurado y de alto impacto profesional.
               </div>
             </div>
 
@@ -337,7 +337,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               </div>
             </div>
 
-            {/* 4. Campo Obligatorio de 3 Líneas de Objetivo (Sección 5.1 del Documento) */}
+            {/* 4. Campo Obligatorio de Temario Previo */}
             <div className="space-y-2 pt-1 border-t border-stone-100">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-stone-800 uppercase tracking-wider">
@@ -348,7 +348,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-stone-500 leading-tight">
-                <strong>Requisito metodológico:</strong> define en al menos 3 puntos concretos qué deseas trabajar (ej: revisión de portfolio/CV, dudas de inserción o entrevista técnica).
+                Detallá en al menos 3 puntos concretos qué temas te gustaría abordar (ej: revisión de portfolio/CV, dudas del mercado laboral o preparación para entrevistas).
               </p>
 
               {/* Quick Template Fillers */}

@@ -1,4 +1,4 @@
-import { Mentor, MentorshipBooking, EventItem, StoryboardStep } from '../types';
+import { Mentor, MentorshipBooking, EventItem } from '../types';
 
 export const INITIAL_MENTORS: Mentor[] = [
   {
@@ -340,7 +340,7 @@ export const INITIAL_EVENTS: EventItem[] = [
     date: 'Viernes 13 de Noviembre, 2026',
     time: '16:00 a 18:30 hs',
     location: 'Campus UBP - Aulas Híbridas Edificio Verde',
-    description: 'Iniciativa institucional para vincular egresados con las cátedras de último año. Los graduados aportan criterio de industria real y feedback constructivo a los proyectos finales de carrera.',
+    description: 'Iniciativa institucional para vincular egresados con alumnos de últimos años. Los graduados aportan criterio de industria real y feedback constructivo a proyectos y trabajos finales.',
     speakerOrHost: 'Secretaría Académica & Red Alumni UBP +25',
     spotsLeft: 12,
     totalSpots: 30,
@@ -350,59 +350,3 @@ export const INITIAL_EVENTS: EventItem[] = [
   },
 ];
 
-export const STORYBOARD_STEPS: StoryboardStep[] = [
-  {
-    stepNumber: 1,
-    title: '1. Acceso al Entorno Institucional',
-    shortDesc: 'El estudiante entra desde su dispositivo habitual buscando orientación profesional.',
-    userStory: 'El estudiante de 4to año siente incertidumbre sobre su inserción al mercado, los requisitos reales de las empresas y cómo validar su perfil sin contactos previos.',
-    systemAction: 'Plataforma oficial UBP Conecta accesible en web y móvil con identidad UBP (azul y amarillo / borgoña institucional) sin barreras burocráticas.',
-    iconName: 'Compass',
-    screenshotLabel: 'Momento 1: Usuario accede a la plataforma institucional',
-  },
-  {
-    stepNumber: 2,
-    title: '2. Autenticación Simplificada',
-    shortDesc: 'Registro rápido integrado con credenciales UBP y carga automática de carrera.',
-    userStory: 'No requiere completar formularios extensos: reconoce automáticamente la carrera, semestre y estado académico del alumno.',
-    systemAction: 'Single Sign-On (SSO) con MiUBP / Portal institucional que precarga el perfil del estudiante y lo habilita de inmediato.',
-    iconName: 'UserCheck',
-    screenshotLabel: 'Momento 2: Proceso de registro ágil y validación de rol',
-  },
-  {
-    stepNumber: 3,
-    title: '3. Descubrimiento y Filtrado (Matching)',
-    shortDesc: 'Exploración del catálogo de egresados/tutores con visualización de experiencia y badges.',
-    userStory: 'El alumno aplica filtros por disciplina, industria o modalidad y encuentra mentores reales que pasaron por sus mismas aulas.',
-    systemAction: 'Módulo de matching disciplinar con filtros dinámicos, disponibilidad en tiempo real y perfiles con temáticas clave.',
-    iconName: 'Filter',
-    screenshotLabel: 'Momento 3: Descubre a su tutor en el catálogo estructurado',
-  },
-  {
-    stepNumber: 4,
-    title: '4. Definición del Formato de Encuentro',
-    shortDesc: 'Selección de canal de interacción: Videollamada integrada o Campus UBP.',
-    userStory: 'El alumno elige si prefiere una videollamada de Google Meet (ideal si reside a distancia o trabaja) o un café en el Campus Argüello.',
-    systemAction: 'Selector de modalidad híbrida (Virtual / Presencial Campus UBP) sincronizado con las preferencias del mentor.',
-    iconName: 'Video',
-    screenshotLabel: 'Momento 4: Selección del método de contacto (Campus o Virtual)',
-  },
-  {
-    stepNumber: 5,
-    title: '5. Sesión de Mentoría Guiada (30 min)',
-    shortDesc: 'Intercambio estructurado de 30 minutos enfocado en dudas puntuales predefinidas.',
-    userStory: 'El estudiante y el mentor se encuentran sabiendo de antemano el temario obligatorio de 3 líneas: se aprovecha cada minuto sin rodeos.',
-    systemAction: 'Protección de agenda del egresado: micro-compromiso cerrado de 30 min con agenda previa visible y recordatorio sincronizado.',
-    iconName: 'Clock',
-    screenshotLabel: 'Momento 5: Sesión estructurada y resolución de dudas técnicas',
-  },
-  {
-    stepNumber: 6,
-    title: '6. Cierre y Evaluación Recíproca',
-    shortDesc: 'Consolidación de aprendizajes, valoración mutua y conexión profesional duradera.',
-    userStory: 'El estudiante resuelve sus dudas y amplía su red de networking; el egresado recibe reconocimiento institucional con Badges UBP.',
-    systemAction: 'Panel "Mis Conexiones": registro de sesión completada, evaluación por estrellas, feedback cualitativo y acreditación de horas de mentoría.',
-    iconName: 'Award',
-    screenshotLabel: 'Momento 6: Termina la tutoría, feedback y red consolidada',
-  },
-];

@@ -43,7 +43,7 @@ export const SessionReviewModal: React.FC<SessionReviewModalProps> = ({
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#A3223A]">
               <Award className="w-3.5 h-3.5" />
-              <span>Cierre & Evaluación Recíproca (Paso 6)</span>
+              <span>Evaluación de la Sesión</span>
             </div>
             <h2 className="text-xl font-extrabold text-stone-900 mt-0.5">
               Valorar Sesión con {booking.mentorName}

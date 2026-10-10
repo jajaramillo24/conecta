@@ -77,11 +77,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
       return `🏛️ **Encuentros de Co-Creación UBP:**\n\n- **Ferias de Talento Inverso:** Los alumnos avanzados presentan proyectos de cátedra ante jurados de egresados que evalúan con mirada de industria.\n- **Mesas Redondas & Flash Mentoring:** Charlas relámpago virtuales o presenciales para resolver dudas masivas en 45 minutos sin sobrecargar a los mentores.\n\nPodés ver las fechas e inscribirte en la pestaña **Ferias & Eventos**.`;
     }
 
-    if (q.includes('grupo 5') || q.includes('quiénes') || q.includes('catedra') || q.includes('innovación')) {
-      return `🎓 **Cátedra de Innovación · Turno Tarde · Grupo 5:**\n\nProyecto elaborado por los estudiantes:\n- Zoe Lobos (Administración)\n- Valeria Loza (Turismo)\n- Gonzalo Beas (Marketing)\n- Octavio López (Contador)\n- Ary German Romero (Telecomunicaciones)\n- Juan Jaramillo (Ing. Informática)\n- Santiago Juri Nam (Ing. Informática)\n- Edgar Karpowicz (Ing. Informática)\n- Valentina Rodrigues (Com. Audiovisual)`;
-    }
-
-    return `UBP Conecta articula la red de más de 20.000 egresados de la Universidad Blas Pascal con estudiantes de 3° y 4° año. Podés explorar el **Directorio de Mentores**, agendar un turno de **30 minutos** con formato presencial o virtual, o revisar el **Storyboard de 6 pasos** en la barra superior. ¿Te gustaría buscar un mentor para alguna carrera en particular?`;
+    return `UBP Conecta articula la red de más de 20.000 egresados de la Universidad Blas Pascal con estudiantes y graduados recientes. Podés explorar el **Directorio de Mentores**, agendar una sesión guiada de **30 minutos** con formato presencial o virtual, o consultar tus turnos en **Mis Conexiones**. ¿Te gustaría buscar un referente de tu carrera o sector profesional?`;
   };
 
   const handleSendMessage = async (textToSend?: string) => {

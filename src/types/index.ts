@@ -168,14 +168,4 @@ export interface EventItem {
   targetAudience: string;
 }
 
-export interface StoryboardStep {
-  stepNumber: number;
-  title: string;
-  shortDesc: string;
-  userStory: string;
-  systemAction: string;
-  iconName: string;
-  screenshotLabel: string;
-}
-
 export type ActiveRole = 'estudiante' | 'egresado';

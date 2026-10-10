@@ -276,7 +276,7 @@ export const SessionsManagementSection: React.FC<SessionsManagementSectionProps>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-emerald-800 font-bold">
                       <Sparkles className="w-4 h-4 text-emerald-600" />
-                      <span>Evaluación Recíproca Registrada</span>
+                      <span>Reseña y Evaluación Registrada</span>
                     </div>
                     <div className="flex items-center gap-1">
                       {[...Array(b.review.rating)].map((_, i) => (
