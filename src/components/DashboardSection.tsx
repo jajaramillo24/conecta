@@ -16,7 +16,8 @@ import {
   ShieldCheck, 
   Layers,
   HelpCircle,
-  Briefcase
+  Briefcase,
+  Bot
 } from 'lucide-react';
 
 interface DashboardSectionProps {
