@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Mentor, MentorshipBooking, UBP_CAREERS } from '../types';
+import React, { useEffect, useRef, useState } from 'react';
+import { Mentor, MentorshipBooking } from '../types';
 import { 
   Calendar, 
   Clock, 
@@ -29,15 +29,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   onConfirmBooking,
   onViewMyBookings,
 }) => {
-  if (!isOpen || !mentor) return null;
-
-  const career = UBP_CAREERS[mentor.career];
-  const availableSlots = mentor.availableSlots.filter((s) => s.available);
+  const availableSlots = mentor?.availableSlots.filter((slot) => {
+    const start = slot.time.split(' ')[0];
+    return slot.available && new Date(`${slot.day}T${start}:00-03:00`).getTime() > Date.now();
+  }) || [];
 
   // Form State
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(availableSlots.length > 0 ? 0 : null);
   const [modalityChoice, setModalityChoice] = useState<'Virtual (Google Meet)' | 'Presencial (Campus UBP)'>(
-    mentor.modality.includes('Presencial') && !mentor.modality.includes('Virtual')
+    mentor?.modality.includes('Presencial') && !mentor.modality.includes('Virtual')
       ? 'Presencial (Campus UBP)'
       : 'Virtual (Google Meet)'
   );
@@ -47,6 +47,25 @@ export const BookingModal: React.FC<BookingModalProps> = ({
   const [sessionObjective, setSessionObjective] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [bookingConfirmed, setBookingConfirmed] = useState<MentorshipBooking | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    dialogRef.current?.querySelector<HTMLElement>('button')?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const elements = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)'));
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => { document.removeEventListener('keydown', onKeyDown); previousFocus?.focus(); };
+  }, [isOpen, onClose]);
 
   // Pre-formatted templates for 3-line required goal
   const templates = [
@@ -73,15 +92,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!mentor) return;
 
     if (selectedSlotIndex === null || !availableSlots[selectedSlotIndex]) {
       setErrorMsg('Por favor seleccioná un horario disponible.');
       return;
     }
 
-    // Strict validation: must provide at least 25 characters and meaningful content (rule of 3 lines)
     if (sessionObjective.trim().length < 25) {
-      setErrorMsg('El temario previo es obligatorio (mínimo 3 líneas o 25 caracteres para orientar al mentor).');
+      setErrorMsg('Contanos tu objetivo con al menos 25 caracteres para orientar al mentor.');
       return;
     }
 
@@ -101,12 +120,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       time: slot.time,
       durationMinutes: 30,
       modality: modalityChoice,
-      locationDetail: isVirtual 
-        ? 'Sala Virtual Google Meet institucional UBP' 
-        : 'Campus Argüello - Sala Coworking / doingLABS UBP',
-      meetingUrl: isVirtual ? `https://meet.google.com/ubp-${mentor.id}-30m` : undefined,
+      locationDetail: isVirtual
+        ? 'Videollamada por coordinar con el mentor'
+        : 'Campus UBP; sala por coordinar con el mentor',
       objective: sessionObjective.trim(),
-      status: 'confirmada',
+      status: 'pendiente',
     };
 
     onConfirmBooking(newBooking);
@@ -125,9 +143,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     onClose();
   };
 
+  if (!isOpen || !mentor) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-2xl border border-stone-200 max-w-xl w-full p-6 sm:p-8 shadow-2xl max-h-[92vh] overflow-y-auto space-y-6">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Solicitar mentoría" className="bg-white rounded-2xl border border-stone-200 max-w-xl w-full p-6 sm:p-8 shadow-2xl max-h-[92vh] overflow-y-auto space-y-6">
         {/* SUCCESS CONFIRMATION STATE */}
         {bookingConfirmed ? (
           <div className="space-y-6 text-center py-4">
@@ -137,13 +157,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
             <div className="space-y-1.5">
               <span className="text-xs font-bold text-[#A3223A] uppercase tracking-wider">
-                ¡Turno Confirmado con Éxito!
+                Solicitud guardada en esta demostración
               </span>
               <h2 className="text-2xl font-extrabold text-stone-900">
-                Tu Micro-Mentoría está en Agenda
+                Tu solicitud está pendiente
               </h2>
               <p className="text-xs text-stone-600 max-w-md mx-auto">
-                Hemos enviado la notificación a <strong className="text-stone-800">{mentor.name}</strong> con el temario previo especificado.
+                Podés revisarla o cancelarla en Mis conexiones. Esta página no envía notificaciones a <strong className="text-stone-800">{mentor.name}</strong> ni crea una reunión real.
               </p>
             </div>
 
@@ -186,6 +206,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               <button
                 type="button"
                 onClick={handleResetAndClose}
+                aria-label="Cerrar solicitud de mentoría"
                 className="px-4 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-lg transition-colors"
               >
                 Cerrar
@@ -222,7 +243,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             <div className="bg-amber-50/80 border border-amber-200/80 rounded-lg p-3 flex items-start gap-2.5 text-xs text-amber-900">
               <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
               <div className="leading-snug">
-                <strong>Encuentro de 30 minutos:</strong> Las sesiones tienen una duración fijada de media hora con temario previo, garantizando un intercambio puntual, estructurado y de alto impacto profesional.
+                <strong>Sesión de 30 minutos:</strong> Elegí un horario de muestra y escribí el objetivo que te gustaría tratar. Esta solicitud se guarda solo durante esta visita.
               </div>
             </div>
 
@@ -237,7 +258,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
 
               {availableSlots.length === 0 ? (
                 <div className="p-3 bg-stone-50 border border-stone-200 rounded-lg text-xs text-stone-500 text-center">
-                  El mentor no tiene cupos libres este mes. Podés consultar a otros graduados en el Directorio.
+                  Este perfil no tiene horarios futuros disponibles. Podés explorar otros perfiles en el directorio.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -248,6 +269,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                         key={slot.id || idx}
                         type="button"
                         onClick={() => setSelectedSlotIndex(idx)}
+                        aria-pressed={isSelected}
                         className={`p-3 rounded-lg text-xs border text-left transition-all flex flex-col justify-between ${
                           isSelected
                             ? 'border-[#A3223A] bg-[#A3223A]/5 ring-1 ring-[#A3223A] font-bold text-[#A3223A]'
@@ -278,6 +300,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setModalityChoice('Virtual (Google Meet)')}
+                  disabled={mentor.modality === 'Presencial (Campus UBP)'}
+                  aria-pressed={modalityChoice === 'Virtual (Google Meet)'}
                   className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${
                     modalityChoice === 'Virtual (Google Meet)'
                       ? 'border-[#A3223A] bg-[#A3223A]/5 ring-1 ring-[#A3223A] text-stone-900 font-bold'
@@ -287,13 +311,15 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                   <Video className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
                     <div>Videollamada</div>
-                    <div className="text-[10px] font-normal text-stone-500">Google Meet oficial UBP</div>
+                    <div className="text-[10px] font-normal text-stone-500">Enlace por coordinar</div>
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setModalityChoice('Presencial (Campus UBP)')}
+                  disabled={mentor.modality === 'Virtual (Google Meet)'}
+                  aria-pressed={modalityChoice === 'Presencial (Campus UBP)'}
                   className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2.5 ${
                     modalityChoice === 'Presencial (Campus UBP)'
                       ? 'border-[#A3223A] bg-[#A3223A]/5 ring-1 ring-[#A3223A] text-stone-900 font-bold'
@@ -312,10 +338,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             {/* 3. Datos del Estudiante */}
             <div className="grid grid-cols-2 gap-3 pt-1 border-t border-stone-100 text-xs">
               <div>
-                <label className="text-[11px] font-semibold text-stone-600 block mb-1">
+                <label htmlFor="booking-student-name" className="text-[11px] font-semibold text-stone-600 block mb-1">
                   Tu Nombre y Apellido
                 </label>
                 <input
+                  id="booking-student-name"
                   type="text"
                   required
                   value={studentName}
@@ -324,10 +351,11 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-stone-600 block mb-1">
+                <label htmlFor="booking-student-career" className="text-[11px] font-semibold text-stone-600 block mb-1">
                   Tu Carrera UBP
                 </label>
                 <input
+                  id="booking-student-career"
                   type="text"
                   required
                   value={studentCareer}
@@ -340,7 +368,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
             {/* 4. Campo Obligatorio de Temario Previo */}
             <div className="space-y-2 pt-1 border-t border-stone-100">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-stone-800 uppercase tracking-wider">
+                <label htmlFor="booking-objective" className="text-xs font-bold text-stone-800 uppercase tracking-wider">
                   3. ¿Cuál es tu objetivo principal en esta sesión? *
                 </label>
                 <span className="text-[10px] text-stone-500 font-medium">
@@ -348,7 +376,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-stone-500 leading-tight">
-                Detallá en al menos 3 puntos concretos qué temas te gustaría abordar (ej: revisión de portfolio/CV, dudas del mercado laboral o preparación para entrevistas).
+                Describí qué querés revisar y qué esperás llevarte. Tres puntos pueden ayudarte a ordenarlo, pero podés escribirlo con tus propias palabras (mínimo 25 caracteres).
               </p>
 
               {/* Quick Template Fillers */}
@@ -367,6 +395,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
               </div>
 
               <textarea
+                id="booking-objective"
                 rows={3}
                 required
                 value={sessionObjective}
@@ -405,7 +434,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5" />
-                <span>Confirmar Reserva (30 min)</span>
+                <span>Guardar solicitud de muestra</span>
               </button>
             </div>
           </form>

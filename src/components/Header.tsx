@@ -31,14 +31,17 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-2xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      <a href="#contenido-principal" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:text-[#8B1D31]">Saltar al contenido</a>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 flex items-center justify-between gap-2">
         {/* Zone 1: Official Brand */}
         <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={() => setActiveTab('inicio')}
+            aria-label="Ir a inicio de UBP Conecta"
             className="flex items-center gap-3 text-left focus-visible:outline-[#A3223A]"
           >
-            <UBPLogo variant="horizontal" size="sm" />
+            <span className="inline-flex items-center gap-2 sm:hidden"><UBPLogo variant="sigla" size="sm" /><span className="text-xs font-black uppercase tracking-wide text-[#8B1D31]">Conecta</span></span>
+            <span className="hidden sm:inline"><UBPLogo variant="horizontal" size="sm" /></span>
             <div className="hidden sm:block border-l border-stone-200 pl-3">
               <span className="text-xs font-black tracking-wider text-[#A3223A] block uppercase">
                 CONECTA
@@ -58,6 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
+                aria-current={isActive ? 'page' : undefined}
                 className={`relative py-1.5 flex items-center gap-1.5 transition-colors whitespace-nowrap ${
                   isActive
                     ? 'text-[#A3223A]'
@@ -83,7 +87,8 @@ export const Header: React.FC<HeaderProps> = ({
           {/* AI Assistant Button */}
           <button
             onClick={onOpenAIAssistant}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#A3223A] bg-[#A3223A]/10 hover:bg-[#A3223A]/15 border border-[#A3223A]/25 rounded-lg transition-colors whitespace-nowrap shadow-2xs"
+            aria-label="Abrir Pascalina IA"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-[#A3223A] bg-[#A3223A]/10 hover:bg-[#A3223A]/15 border border-[#A3223A]/25 rounded-lg transition-colors whitespace-nowrap shadow-2xs"
             title="Abrir Asistente IA de Orientación y Matching"
           >
             <Bot className="w-3.5 h-3.5 text-[#A3223A]" />
@@ -117,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Authenticated user indicator */}
-          <div className="flex items-center gap-2 pl-2 border-l border-stone-200">
+          <div className="hidden md:flex items-center gap-2 pl-2 border-l border-stone-200">
             <div className="w-7 h-7 rounded-full bg-[#A3223A] text-white flex items-center justify-center text-xs font-bold shrink-0">
               {userRole === 'estudiante' ? 'JA' : 'JC'}
             </div>
@@ -134,14 +139,15 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Mobile Navigation Bar */}
-      <div className="lg:hidden flex items-center overflow-x-auto px-4 py-2 border-t border-stone-200 gap-3 text-xs font-medium scrollbar-none bg-stone-50/70">
+      <nav aria-label="Secciones principales" className="lg:hidden grid grid-cols-2 sm:flex sm:overflow-x-auto items-center px-4 py-2 border-t border-stone-200 gap-2 text-xs font-medium bg-stone-50/70">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           return (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`whitespace-nowrap px-2.5 py-1 rounded-md transition-colors font-semibold flex items-center gap-1 ${
+              aria-current={isActive ? 'page' : undefined}
+              className={`min-h-10 justify-center text-center leading-tight px-2.5 py-1 rounded-md transition-colors font-semibold flex items-center gap-1 sm:whitespace-nowrap ${
                 isActive
                   ? 'bg-[#A3223A] text-white'
                   : 'text-stone-600 hover:text-stone-900'
@@ -158,7 +164,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           );
         })}
-      </div>
+      </nav>
     </header>
   );
 };

@@ -47,6 +47,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
             <button
               key={cat.id}
               onClick={() => setCategoryFilter(cat.id)}
+              aria-pressed={categoryFilter === cat.id}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all whitespace-nowrap ${
                 categoryFilter === cat.id
                   ? 'bg-[#A3223A] text-white shadow-xs'
@@ -84,9 +85,9 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                 </div>
 
                 {/* Title */}
-                <h3 className="font-bold text-stone-900 text-base leading-snug">
+                <h2 className="font-bold text-stone-900 text-base leading-snug">
                   {event.title}
-                </h3>
+                </h2>
 
                 {/* Description */}
                 <p className="text-xs text-stone-600 leading-relaxed">
@@ -121,19 +122,21 @@ export const EventsSection: React.FC<EventsSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => onToggleEventRegistration(event.id)}
+                  disabled={!event.registered && event.spotsLeft === 0}
+                  aria-pressed={event.registered}
                   className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
                     event.registered
                       ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : 'bg-stone-900 hover:bg-[#A3223A] text-white hover:scale-[1.01]'
+                      : event.spotsLeft === 0 ? 'bg-stone-200 text-stone-600 cursor-not-allowed' : 'bg-stone-900 hover:bg-[#A3223A] text-white hover:scale-[1.01]'
                   }`}
                 >
                   {event.registered ? (
                     <>
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Inscripto ✓</span>
+                      <span>Inscripto · clic para cancelar</span>
                     </>
                   ) : (
-                    <span>Anotarme al Encuentro</span>
+                    <span>{event.spotsLeft === 0 ? 'Sin cupos' : 'Simular inscripción'}</span>
                   )}
                 </button>
               </div>

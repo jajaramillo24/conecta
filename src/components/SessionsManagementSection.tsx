@@ -75,6 +75,8 @@ export const SessionsManagementSection: React.FC<SessionsManagementSectionProps>
             <span>Completada</span>
           </span>
         );
+      case 'cancelada':
+        return <span className="inline-flex rounded-full border border-stone-300 bg-stone-100 px-2.5 py-0.5 text-xs font-bold text-stone-700">Cancelada</span>;
       default:
         return null;
     }
@@ -90,11 +92,10 @@ export const SessionsManagementSection: React.FC<SessionsManagementSectionProps>
             <span>Panel de Trazabilidad & Gestión de Red · UBP Conecta</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 mt-1">
-            Mis Conexiones & Sesiones Agendadas
+            Mis conexiones y solicitudes
           </h1>
           <p className="text-sm text-stone-600 mt-1.5 max-w-2xl leading-relaxed">
-            Hacé seguimiento del estado de tus solicitudes de mentoría de 30 minutos, accedé a las salas de videollamada y completá la 
-            <strong className="text-stone-800"> valoración recíproca post-encuentro</strong>.
+            Consultá el estado de las solicitudes de muestra, revisá los detalles del encuentro y dejá una valoración después de una sesión completada.
           </p>
         </div>
 
@@ -200,13 +201,14 @@ export const SessionsManagementSection: React.FC<SessionsManagementSectionProps>
                 <div className="flex items-center gap-2">
                   {getStatusBadge(b.status)}
 
-                  <button
+                  {(b.status === 'pendiente' || b.status === 'confirmada') && <button
                     onClick={() => onCancelBooking(b.id)}
-                    className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-stone-100 rounded-md transition-colors"
-                    title="Cancelar o archivar turno"
+                    className="p-1.5 text-stone-500 hover:text-rose-700 hover:bg-stone-100 rounded-md transition-colors"
+                    title="Cancelar solicitud"
+                    aria-label={`Cancelar solicitud con ${b.mentorName}`}
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
+                  </button>}
                 </div>
               </div>
 
@@ -311,6 +313,9 @@ export const SessionsManagementSection: React.FC<SessionsManagementSectionProps>
                       <ExternalLink className="w-3 h-3 ml-0.5" />
                     </a>
                   )}
+                  {b.modality.includes('Virtual') && !b.meetingUrl && b.status !== 'cancelada' && (
+                    <span className="text-xs text-stone-600">Enlace de videollamada aún no disponible</span>
+                  )}
 
                   {/* Physical Campus map button */}
                   {b.modality.includes('Campus') && (
@@ -323,7 +328,7 @@ export const SessionsManagementSection: React.FC<SessionsManagementSectionProps>
 
                 <div className="flex items-center gap-2">
                   {/* Status toggle simulation */}
-                  {b.status === 'pendiente' && (
+                  {b.status === 'pendiente' && userRole === 'egresado' && (
                     <button
                       onClick={() => onUpdateBookingStatus(b.id, 'confirmada')}
                       className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1 shadow-xs"

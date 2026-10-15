@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { UBPLogo } from './UBPLogo';
 import { Mentor, EventItem, CareerId, UBP_CAREERS, ActiveRole } from '../types';
 import { 
   Search, 
@@ -48,7 +49,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
   const [globalSearch, setGlobalSearch] = useState('');
   const [selectedFacultyTab, setSelectedFacultyTab] = useState<string>('all');
 
-  const featuredMentors = mentors.filter((m) => m.featured || m.rating >= 4.9);
+  const featuredMentors = mentors;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,13 +84,11 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
       <section className="relative overflow-hidden rounded-2xl bg-linear-to-br from-[#8B1D31] via-[#A3223A] to-[#681022] text-white p-6 sm:p-10 shadow-lg">
         {/* Subtle background graphic */}
         <div className="absolute -right-10 -bottom-10 w-96 h-96 rounded-full bg-white/5 blur-3xl pointer-events-none" />
-        <div className="absolute right-12 top-6 hidden lg:block opacity-15 pointer-events-none">
-          <div className="w-56 h-56 border-8 border-white/20 rounded-2xl transform rotate-12 flex items-center justify-center font-extrabold text-7xl">
-            UBP
-          </div>
+        <div className="absolute right-12 top-10 hidden lg:block rounded-2xl bg-white p-5 shadow-xl pointer-events-none">
+          <UBPLogo variant="vertical" size="lg" />
         </div>
 
-        <div className="relative z-10 max-w-3xl space-y-5">
+        <div className="relative z-10 max-w-3xl lg:max-w-2xl space-y-5">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/15 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider text-amber-200 border border-white/20">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
             <span>Red Adaptativa de Mentoría y Vinculación Profesional</span>
@@ -224,9 +223,9 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
             <span className="text-xs font-semibold uppercase tracking-wider">Comunidad Alumni</span>
             <Users className="w-4 h-4 text-[#A3223A]" />
           </div>
-          <div className="text-2xl font-black text-stone-900">+20.000</div>
+          <div className="text-2xl font-black text-stone-900">Red UBP</div>
           <p className="text-[11px] text-stone-500 mt-1">
-            Graduados pascalinos en Argentina y el mundo dispuestos a colaborar.
+            Explorá perfiles de distintas carreras y elegí según tus intereses.
           </p>
         </div>
 
@@ -257,7 +256,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
             <span className="text-xs font-semibold uppercase tracking-wider">Modalidad</span>
             <ShieldCheck className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-2xl font-black text-stone-900">100% Híbrida</div>
+          <div className="text-2xl font-black text-stone-900">Virtual o presencial</div>
           <p className="text-[11px] text-stone-500 mt-1">
             Google Meet para alumnos a distancia o presencial en Campus Argüello.
           </p>
@@ -332,7 +331,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                       : 'bg-stone-900 hover:bg-[#A3223A] text-white'
                   }`}
                 >
-                  {event.registered ? 'Inscripto ✓' : 'Anotarme'}
+                  {event.registered ? 'Ver inscripción' : 'Ver detalles'}
                 </button>
               </div>
             </div>
@@ -348,10 +347,10 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
               Conexión Directa con Graduados
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-stone-900 mt-0.5">
-              Mentores Destacados de la Semana
+              Perfiles de mentores para explorar
             </h2>
             <p className="text-xs text-stone-600 mt-1 max-w-xl">
-              Profesionales de la comunidad UBP con cupos de micro-mentoría de 30 minutos abiertos este mes.
+              Perfiles de muestra de distintas carreras. Consultá sus temas y horarios futuros antes de solicitar una sesión.
             </p>
           </div>
 
@@ -385,7 +384,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {mentorsByFaculty.map((mentor) => {
             const career = UBP_CAREERS[mentor.career];
-            const freeSlots = mentor.availableSlots.filter((s) => s.available).length;
+            const freeSlots = mentor.availableSlots.filter((slot) => slot.available && new Date(`${slot.day}T${slot.time.split(' ')[0]}:00-03:00`).getTime() > Date.now()).length;
 
             return (
               <div
@@ -421,10 +420,6 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 text-xs text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 shrink-0">
-                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                      <span>{mentor.rating.toFixed(1)}</span>
-                    </div>
                   </div>
 
                   {/* Role Title & Bio */}
@@ -466,7 +461,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                     </div>
 
                     <div className="text-[11px]">
-                      <span className="font-bold text-[#A3223A]">{freeSlots}</span> cupo(s) este mes
+                      <span className="font-bold text-[#A3223A]">{freeSlots}</span> horarios futuros
                     </div>
                   </div>
                 </div>
@@ -483,7 +478,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                   }`}
                 >
                   <Calendar className="w-3.5 h-3.5" />
-                  <span>Solicitar Mentoría (30 min)</span>
+                  <span>{freeSlots > 0 ? 'Solicitar mentoría de muestra' : 'Sin horarios futuros'}</span>
                 </button>
               </div>
             );

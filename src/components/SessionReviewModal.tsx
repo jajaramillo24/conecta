@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MentorshipBooking, SessionReview } from '../types';
 import { Star, CheckCircle, Award, Sparkles, MessageSquare } from 'lucide-react';
 
@@ -15,19 +15,35 @@ export const SessionReviewModal: React.FC<SessionReviewModalProps> = ({
   onClose,
   onSubmitReview,
 }) => {
-  if (!isOpen || !booking) return null;
-
-  const [rating, setRating] = useState<number>(5);
+  const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
-  const [helpedCareerGoal, setHelpedCareerGoal] = useState<boolean>(true);
-  const [punctuality, setPunctuality] = useState<boolean>(true);
+  const [helpedCareerGoal, setHelpedCareerGoal] = useState<boolean>(false);
+  const [punctuality, setPunctuality] = useState<boolean>(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    dialogRef.current?.querySelector<HTMLElement>('button')?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const elements = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea:not(:disabled)'));
+      if (!elements.length) return;
+      if (event.shiftKey && document.activeElement === elements[0]) { event.preventDefault(); elements[elements.length - 1].focus(); }
+      if (!event.shiftKey && document.activeElement === elements[elements.length - 1]) { event.preventDefault(); elements[0].focus(); }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => { document.removeEventListener('keydown', onKeyDown); previousFocus?.focus(); };
+  }, [isOpen, onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (rating === 0 || !booking) return;
     const review: SessionReview = {
       rating,
-      feedbackText: feedbackText.trim() || 'Sesión excelente y muy enriquecedora para mi desarrollo profesional.',
+      feedbackText: feedbackText.trim(),
       helpedCareerGoal,
       punctuality,
       submittedAt: new Date().toISOString(),
@@ -36,9 +52,11 @@ export const SessionReviewModal: React.FC<SessionReviewModalProps> = ({
     onClose();
   };
 
+  if (!isOpen || !booking) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-2xl border border-stone-200 max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Valorar sesión" className="bg-white rounded-2xl border border-stone-200 max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
         <div className="flex items-start justify-between border-b border-stone-100 pb-4">
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#A3223A]">
@@ -54,6 +72,7 @@ export const SessionReviewModal: React.FC<SessionReviewModalProps> = ({
           </div>
           <button
             onClick={onClose}
+            aria-label="Cerrar valoración"
             className="text-stone-400 hover:text-stone-700 text-xl font-bold"
           >
             ✕
@@ -74,6 +93,8 @@ export const SessionReviewModal: React.FC<SessionReviewModalProps> = ({
                     key={star}
                     type="button"
                     onClick={() => setRating(star)}
+                    aria-label={`Calificar con ${star} ${star === 1 ? 'estrella' : 'estrellas'}`}
+                    aria-pressed={rating === star}
                     onMouseEnter={() => setHoverRating(star)}
                     onMouseLeave={() => setHoverRating(null)}
                     className="p-1 transition-transform hover:scale-125 focus:outline-hidden"
@@ -90,6 +111,7 @@ export const SessionReviewModal: React.FC<SessionReviewModalProps> = ({
               })}
             </div>
             <div className="text-[11px] font-semibold text-stone-500">
+              {rating === 0 && 'Seleccioná una calificación'}
               {rating === 5 && '¡Excelente! Aporte decisivo para mi perfil'}
               {rating === 4 && 'Muy buena y orientadora'}
               {rating === 3 && 'Buena, resolvió dudas básicas'}
@@ -158,6 +180,7 @@ export const SessionReviewModal: React.FC<SessionReviewModalProps> = ({
             </button>
             <button
               type="submit"
+              disabled={rating === 0}
               className="px-5 py-2.5 bg-[#A3223A] hover:bg-[#8B1D31] text-white font-bold rounded-lg transition-colors shadow-xs"
             >
               Enviar Valoración

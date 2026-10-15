@@ -14,46 +14,25 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Initialize Google GenAI on the server side
 const apiKey = process.env.GEMINI_API_KEY || '';
-const ai = new GoogleGenAI({
-  apiKey,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    },
-  },
-});
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 // Endpoint for UBP AI Assistant with Google Search Grounding
 app.post('/api/assistant', async (req, res) => {
   try {
-    const { message, history } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+    const { message } = req.body || {};
+    if (typeof message !== 'string' || !message.trim() || message.length > 2000) {
+      return res.status(400).json({ error: 'Escribí una consulta de hasta 2000 caracteres.' });
     }
 
-    if (!apiKey) {
-      // Friendly fallback if key not configured
-      return res.json({
-        reply: `Como asistente oficial de UBP Conecta, te informo que podés consultar la agenda de eventos, anotarte al Torneo de Fútbol Alumnos vs. Egresados en el Campus de Argüello (Donato Álvarez 3800), solicitar mentorías con graduados destacados como Juan Chacón (Machinalis/MELI) o Carlos Ciravegna, y consultar convenios deportivos de Pádel y clubes de Córdoba.`,
-        sources: [],
-      });
+    if (!ai) {
+      return res.status(503).json({ error: 'El asistente IA no está configurado.' });
     }
 
-    const systemInstruction = `Sos el asistente inteligente oficial de la plataforma "UBP Conecta" de la Universidad Blas Pascal (UBP), ubicada en Av. Donato Álvarez 3800, Argüello, Córdoba, Argentina.
-Tu lema es "Saber y Saber Hacer".
-Ayudás a alumnos y egresados a:
-1. Encontrar graduados destacados (ej. Juan Chacón de Machinalis/Mercado Libre, Carlos Ciravegna en arquitectura, Nazarena Bulacios premio COPIME, Dr. Juan Mundel en DePaul Chicago, etc.).
-2. Informar sobre las mentorías "Book With Me" y el Centro de Graduados/as.
-3. Brindar detalles sobre actividades deportivas: el Torneo Copa Blas Pascal (fútbol 7 y 11), convenios de pádel gratuito, alianzas con Belgrano y Talleres, ajedrez y el proyecto internacional SEMASC.
-4. Información sobre doingLABS (la incubadora UBP) y Córdoba Management School (CMS).
-5. Podés usar Google Search para buscar información verídica y actualizada sobre la Universidad Blas Pascal.
-Respondé con calidez universitaria cordobesa pero profesional, de forma concisa y útil en español.`;
+    const systemInstruction = `Sos Pascalina, una ayuda experimental para una demostración de UBP Conecta. Respondé en español, de forma breve y clara. Las reservas, eventos y perfiles de la interfaz son datos de muestra: no confirmes acciones reales, disponibilidad, enlaces ni afiliaciones. Si no tenés datos suficientes, decilo y sugerí revisar el directorio o consultar a la universidad. Explicá por qué sugerís un perfil y recordá que la persona puede elegir otro. No inventes niveles de certeza, fuentes, fechas ni credenciales. No hagas afirmaciones de precisión garantizada. Evitá formato Markdown.`;
 
-    // Call Gemini 3.5 Flash with Google Search tool
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: process.env.GEMINI_MODEL || 'gemini-3.6-flash',
       contents: message,
       config: {
         systemInstruction,
@@ -61,7 +40,8 @@ Respondé con calidez universitaria cordobesa pero profesional, de forma concisa
       },
     });
 
-    const reply = response.text || 'No pude generar una respuesta en este momento.';
+    const reply = response.text?.trim();
+    if (!reply) return res.status(502).json({ error: 'La IA no devolvió una respuesta.' });
     
     // Extract sources from grounding metadata if available
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
@@ -70,18 +50,16 @@ Respondé con calidez universitaria cordobesa pero profesional, de forma concisa
       .map((c: any) => ({
         title: c.web.title,
         uri: c.web.uri,
-      }));
+      })).slice(0, 4);
 
     return res.json({
       reply,
       sources,
+      mode: 'ai',
     });
   } catch (err: any) {
     console.error('Error in /api/assistant:', err);
-    return res.status(500).json({
-      error: 'Error al procesar la consulta con el asistente de IA.',
-      details: err.message,
-    });
+    return res.status(503).json({ error: 'No se pudo completar la consulta con IA. Intentá de nuevo.' });
   }
 });
 

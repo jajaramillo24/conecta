@@ -119,14 +119,13 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
         <div>
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#A3223A]">
             <GraduationCap className="w-4 h-4" />
-            <span>Módulo de Matching Disciplinar · UBP Conecta</span>
+            <span>Directorio de perfiles de muestra · UBP Conecta</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-stone-900 mt-1">
             Directorio de Egresados & Mentores
           </h1>
           <p className="text-sm text-stone-600 mt-1.5 max-w-2xl leading-relaxed">
-            Filtrá referentes por disciplina, trayectoria y formato de encuentro. Las sesiones están acotadas a 
-            <strong className="text-stone-800"> bloques de 30 minutos</strong> con agenda confirmada.
+            Filtrá los perfiles por disciplina, experiencia y modalidad. Los resultados se basan en esos filtros; revisá cada perfil y elegí el que mejor se ajuste a tu consulta.
           </p>
         </div>
 
@@ -149,6 +148,7 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
             <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
+              aria-label="Buscar mentores por nombre, empresa o tema"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por nombre, cargo, empresa o temas (ej.: CV, Tesis, Machinalis, Big Tech)..."
@@ -171,10 +171,11 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-stone-100 text-xs">
           {/* Disciplina / Carrera UBP */}
           <div>
-            <label className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
+            <label htmlFor="mentor-career" className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
               Disciplina / Carrera
             </label>
             <select
+              id="mentor-career"
               value={selectedCareer}
               onChange={(e) => setSelectedCareer(e.target.value as CareerId | 'all')}
               className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg focus:outline-hidden focus:border-[#A3223A] font-medium"
@@ -190,10 +191,11 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
 
           {/* Industria */}
           <div>
-            <label className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
+            <label htmlFor="mentor-industry" className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
               Industria / Sector
             </label>
             <select
+              id="mentor-industry"
               value={selectedIndustry}
               onChange={(e) => setSelectedIndustry(e.target.value)}
               className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg focus:outline-hidden focus:border-[#A3223A] font-medium"
@@ -209,10 +211,11 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
 
           {/* Experiencia */}
           <div>
-            <label className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
+            <label htmlFor="mentor-experience" className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
               Años de Experiencia
             </label>
             <select
+              id="mentor-experience"
               value={selectedExperience}
               onChange={(e) => setSelectedExperience(e.target.value)}
               className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg focus:outline-hidden focus:border-[#A3223A] font-medium"
@@ -226,16 +229,17 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
 
           {/* Modalidad */}
           <div>
-            <label className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
+            <label htmlFor="mentor-modality" className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
               Modalidad de Sesión
             </label>
             <select
+              id="mentor-modality"
               value={selectedModality}
               onChange={(e) => setSelectedModality(e.target.value)}
               className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg focus:outline-hidden focus:border-[#A3223A] font-medium"
             >
               <option value="all">Cualquier formato</option>
-              <option value="virtual">Virtual (Google Meet UBP)</option>
+              <option value="virtual">Virtual</option>
               <option value="presencial">Presencial (Campus Argüello)</option>
             </select>
           </div>
@@ -245,6 +249,7 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
         <div className="flex items-center gap-1.5 overflow-x-auto pt-2 scrollbar-none">
           <button
             onClick={() => setSelectedCareer('all')}
+            aria-pressed={selectedCareer === 'all'}
             className={`px-2.5 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors ${
               selectedCareer === 'all'
                 ? 'bg-[#A3223A] text-white'
@@ -257,6 +262,7 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
             <button
               key={career.id}
               onClick={() => setSelectedCareer(career.id)}
+              aria-pressed={selectedCareer === career.id}
               className={`px-2.5 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors ${
                 selectedCareer === career.id
                   ? 'bg-stone-900 text-white'
@@ -272,14 +278,14 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
       {/* 3. Results Counter & Active States */}
       <div className="flex items-center justify-between text-xs text-stone-500 px-1">
         <div>
-          Mostrando <strong className="text-stone-900 font-bold">{filteredMentors.length}</strong> mentores disponibles
+          Mostrando <strong className="text-stone-900 font-bold">{filteredMentors.length}</strong> perfiles de muestra
           {selectedCareer !== 'all' && (
             <span> para <strong className="text-stone-900">{UBP_CAREERS[selectedCareer].name}</strong></span>
           )}
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-          <span className="text-[11px]">Cupos de Octubre 2026 habilitados</span>
+          <span className="text-[11px]">Horarios futuros de muestra</span>
         </div>
       </div>
 
@@ -304,7 +310,7 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredMentors.map((mentor) => {
             const career = UBP_CAREERS[mentor.career];
-            const freeSlots = mentor.availableSlots.filter((s) => s.available).length;
+            const freeSlots = mentor.availableSlots.filter((slot) => slot.available && new Date(`${slot.day}T${slot.time.split(' ')[0]}:00-03:00`).getTime() > Date.now()).length;
 
             return (
               <div
@@ -322,9 +328,9 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
                         {mentor.avatarInitial}
                       </div>
                       <div>
-                        <h3 className="font-bold text-stone-900 text-sm leading-snug">
+                      <h2 className="font-bold text-stone-900 text-sm leading-snug">
                           {mentor.name}
-                        </h3>
+                      </h2>
                         <p className="text-xs text-stone-500 font-medium">
                           {mentor.company}
                         </p>
@@ -340,11 +346,6 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 text-xs text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 shrink-0">
-                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                      <span>{mentor.rating.toFixed(1)}</span>
-                      <span className="text-[10px] text-stone-400 font-normal">({mentor.reviewsCount})</span>
-                    </div>
                   </div>
 
                   {/* Badges de Reciprocidad (Sección 4.1 del documento) */}
@@ -422,7 +423,7 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
                   }`}
                 >
                   <Calendar className="w-3.5 h-3.5" />
-                  <span>{freeSlots > 0 ? 'Solicitar Mentoría (30 min)' : 'Sin cupos disponibles este mes'}</span>
+                  <span>{freeSlots > 0 ? 'Solicitar mentoría de muestra' : 'Sin horarios futuros disponibles'}</span>
                 </button>
               </div>
             );

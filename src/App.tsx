@@ -13,7 +13,7 @@ import {
   INITIAL_EVENTS,
 } from './data/mockData';
 import { Mentor, MentorshipBooking, EventItem, CareerId, ActiveRole, SessionReview } from './types';
-import { Bot, Sparkles, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('inicio');
@@ -34,8 +34,13 @@ export default function App() {
   const [isOfferSlotModalOpen, setIsOfferSlotModalOpen] = useState(false);
 
   // New slot form state for alumni
-  const [offerSlotDay, setOfferSlotDay] = useState('2026-10-28');
+  const [offerSlotDay, setOfferSlotDay] = useState(() => {
+    const date = new Date();
+    const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 4);
+    return `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-${String(nextMonth.getDate()).padStart(2, '0')}`;
+  });
   const [offerSlotTime, setOfferSlotTime] = useState('18:00 - 18:30');
+  const [offerSlotError, setOfferSlotError] = useState('');
 
   // Handlers for Navigation with search filters
   const handleNavigateToDirectorio = (search?: string, career?: CareerId) => {
@@ -77,7 +82,13 @@ export default function App() {
 
   // Cancel booking
   const handleCancelBooking = (bookingId: string) => {
-    setBookings((prev) => prev.filter((b) => b.id !== bookingId));
+    const booking = bookings.find((item) => item.id === bookingId);
+    if (!booking || !window.confirm('¿Cancelar esta solicitud de muestra? Podrás volver a elegir el horario si sigue disponible.')) return;
+    setBookings((prev) => prev.map((item) => item.id === bookingId ? { ...item, status: 'cancelada' } : item));
+    setMentors((prev) => prev.map((mentor) => mentor.id === booking.mentorId ? {
+      ...mentor,
+      availableSlots: mentor.availableSlots.map((slot) => slot.day === booking.date && slot.time === booking.time ? { ...slot, available: true } : slot),
+    } : mentor));
   };
 
   // Toggle Event Registration
@@ -86,6 +97,7 @@ export default function App() {
       prev.map((ev) => {
         if (ev.id !== eventId) return ev;
         const newRegistered = !ev.registered;
+        if (newRegistered && ev.spotsLeft === 0) return ev;
         return {
           ...ev,
           registered: newRegistered,
@@ -113,6 +125,20 @@ export default function App() {
   const handleAddAlumniSlot = (e: React.FormEvent) => {
     e.preventDefault();
     const chaconId = 'm-juan-chacon';
+    const mentor = mentors.find((item) => item.id === chaconId);
+    const month = offerSlotDay.slice(0, 7);
+    if (!mentor || new Date(`${offerSlotDay}T${offerSlotTime.slice(0, 5)}:00-03:00`).getTime() <= Date.now()) {
+      setOfferSlotError('Elegí un horario futuro.');
+      return;
+    }
+    if (mentor.availableSlots.filter((slot) => slot.day.startsWith(month)).length >= mentor.monthlySlotsCap) {
+      setOfferSlotError(`Ya hay ${mentor.monthlySlotsCap} cupos cargados para ese mes. Elegí otro mes.`);
+      return;
+    }
+    if (mentor.availableSlots.some((slot) => slot.day === offerSlotDay && slot.time === offerSlotTime)) {
+      setOfferSlotError('Ese horario ya está cargado. Elegí otro.');
+      return;
+    }
     setMentors((prev) =>
       prev.map((m) => {
         if (m.id !== chaconId) return m;
@@ -126,6 +152,7 @@ export default function App() {
       })
     );
     setIsOfferSlotModalOpen(false);
+    setOfferSlotError('');
   };
 
   return (
@@ -137,21 +164,25 @@ export default function App() {
           setActiveTab(tab);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        bookingCount={bookings.length}
+        bookingCount={bookings.filter((booking) => booking.status !== 'cancelada').length}
         userRole={userRole}
         setUserRole={setUserRole}
         onOpenAIAssistant={() => setIsAIAssistantOpen(true)}
       />
 
+      <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-xs font-medium text-amber-950">
+        Demostración interactiva: los perfiles, reservas e inscripciones son de muestra y se reinician al recargar la página.
+      </div>
+
       {/* 2. Ribbon Institucional de Vinculación y Ferias */}
       <div className="bg-[#8B1D31] text-white py-2 px-4 text-xs shadow-2xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2 font-medium">
+          <div className="flex min-w-0 items-center gap-2 font-medium">
             <span className="bg-white/20 px-2 py-0.5 rounded-sm font-black uppercase tracking-wider text-[10px] text-amber-200">
               Co-Creación UBP
             </span>
-            <span className="truncate">
-              Inscripciones abiertas para la <strong>Feria de Talento Inverso</strong> y evaluación de proyectos finales con graduados.
+            <span className="min-w-0 leading-relaxed">
+              Explorá la <strong>Feria de Talento Inverso</strong> y los encuentros de muestra.
             </span>
           </div>
           <button
@@ -168,7 +199,7 @@ export default function App() {
       </div>
 
       {/* 3. Main Content Router */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <main id="contenido-principal" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* Vista 1: Pantalla de Inicio / Dashboard Principal */}
         {activeTab === 'inicio' && (
           <DashboardSection
@@ -229,20 +260,9 @@ export default function App() {
         )}
       </main>
 
-      {/* Floating Copilot Button */}
-      <div className="fixed bottom-6 right-6 z-30">
-        <button
-          onClick={() => setIsAIAssistantOpen(true)}
-          className="flex items-center gap-2.5 px-4 py-3 bg-[#A3223A] hover:bg-[#8B1D31] text-white rounded-full shadow-xl hover:shadow-2xl transition-all font-bold text-xs border border-white/20 group hover:scale-105"
-          title="Consultar a Pascalina IA (Matching y temario de 3 líneas)"
-        >
-          <Bot className="w-4 h-4 text-amber-300 transition-transform group-hover:rotate-12" />
-          <span>Consultar a Pascalina IA</span>
-        </button>
-      </div>
-
       {/* Vista 3: Módulo de Agendamiento Modular (Micro-Mentoring 30 min) */}
       <BookingModal
+        key={activeBookingMentor?.id ?? 'closed'}
         mentor={activeBookingMentor}
         isOpen={Boolean(activeBookingMentor)}
         onClose={() => setActiveBookingMentor(null)}
@@ -257,7 +277,7 @@ export default function App() {
       {/* Modal: Habilitar Cupos Mensuales de Mentoría (Perspectiva Egresado) */}
       {isOfferSlotModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl border border-stone-200 max-w-md w-full p-6 shadow-2xl space-y-5">
+          <div role="dialog" aria-modal="true" aria-label="Habilitar cupo de mentoría" className="bg-white rounded-2xl border border-stone-200 max-w-md w-full p-6 shadow-2xl space-y-5">
             <div className="flex items-start justify-between border-b border-stone-100 pb-3">
               <div>
                 <span className="text-[10px] font-bold text-[#A3223A] uppercase tracking-wider">
@@ -269,6 +289,7 @@ export default function App() {
               </div>
               <button
                 onClick={() => setIsOfferSlotModalOpen(false)}
+                aria-label="Cerrar formulario de cupo"
                 className="text-stone-400 hover:text-stone-700 text-lg font-bold"
               >
                 ✕
@@ -289,8 +310,9 @@ export default function App() {
                 </label>
                 <input
                   type="date"
+                  min={new Date().toLocaleDateString('en-CA')}
                   value={offerSlotDay}
-                  onChange={(e) => setOfferSlotDay(e.target.value)}
+                  onChange={(e) => { setOfferSlotDay(e.target.value); setOfferSlotError(''); }}
                   className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-[#A3223A] focus:outline-hidden"
                   required
                 />
@@ -312,6 +334,8 @@ export default function App() {
                   <option value="19:00 - 19:30">19:00 - 19:30 hs</option>
                 </select>
               </div>
+
+              {offerSlotError && <p role="alert" className="rounded-lg bg-rose-50 p-2 text-rose-800">{offerSlotError}</p>}
 
               <div className="pt-2 border-t border-stone-200 flex justify-end gap-2">
                 <button
@@ -337,13 +361,7 @@ export default function App() {
       <AIAssistantModal
         isOpen={isAIAssistantOpen}
         onClose={() => setIsAIAssistantOpen(false)}
-        onSelectMentor={(mentorId) => {
-          const mentor = mentors.find((m) => m.id === mentorId);
-          if (mentor) {
-            setIsAIAssistantOpen(false);
-            setActiveBookingMentor(mentor);
-          }
-        }}
+        onNavigateToDirectorio={() => handleNavigateToDirectorio()}
       />
 
       {/* Footer Oficial */}

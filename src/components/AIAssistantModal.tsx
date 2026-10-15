@@ -1,259 +1,184 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, Sparkles, ExternalLink, RefreshCw, X, MessageSquare, GraduationCap } from 'lucide-react';
-import { UBPLogo } from './UBPLogo';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bot, Send, X, RefreshCw, Search } from 'lucide-react';
 import { INITIAL_MENTORS } from '../data/mockData';
 
-interface Message {
+type Source = { title: string; uri: string };
+type Message = {
   id: string;
   sender: 'user' | 'assistant';
   text: string;
-  timestamp: string;
-}
+  origin?: 'guide' | 'ai';
+  sources?: Source[];
+  query?: string;
+  failed?: boolean;
+  feedback?: 'useful' | 'not-useful';
+};
 
 interface AIAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectMentor?: (mentorId: string) => void;
+  onNavigateToDirectorio?: () => void;
 }
 
-export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ 
-  isOpen, 
-  onClose,
-}) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      sender: 'assistant',
-      text: '¡Hola! Soy Pascalina IA, la asistente de orientación y matching de UBP Conecta. Puedo ayudarte a redactar el temario obligatorio de 3 líneas para tu sesión, recomendarte egresados mentores según tu carrera o explicarte cómo funcionan las micro-mentorías de 30 minutos y las ferias de talento. ¿En qué te puedo asesorar hoy?',
-      timestamp: 'Ahora',
-    },
-  ]);
+const suggestions = [
+  '¿Cómo preparo el objetivo de mi mentoría?',
+  'Busco un mentor de informática',
+  '¿Cómo funcionan las sesiones de 30 minutos?',
+  '¿Dónde veo los eventos?',
+];
+
+function localGuide(query: string): string {
+  const normalized = query.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (/objetivo|temario|redact|prepar/.test(normalized)) {
+    return 'Para preparar tu sesión, escribí: 1) tu carrera y situación actual; 2) la duda o trabajo concreto que querés revisar; 3) qué te gustaría llevarte del encuentro. Podés editar ese texto antes de solicitar el horario.';
+  }
+  if (/30 minuto|sesion|reserva|turno|horario/.test(normalized)) {
+    return 'En esta demostración podés elegir un horario disponible y proponer un objetivo para una sesión de 30 minutos. La solicitud se guarda solo en esta página; no se envía al mentor ni se crea una videollamada real.';
+  }
+  if (/evento|feria|jurado|encuentro/.test(normalized)) {
+    return 'Abrí “Ferias y eventos” para ver las actividades de muestra y probar la inscripción. Es una simulación: verificá fechas y disponibilidad con la universidad antes de planificar tu asistencia.';
+  }
+  const words = normalized.split(/[^a-z0-9]+/).filter((word) => word.length > 3);
+  const matches = INITIAL_MENTORS.map((mentor) => {
+    const fields = `${mentor.name} ${mentor.careerName} ${mentor.role} ${mentor.topics.join(' ')}`.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return { mentor, score: words.filter((word) => fields.includes(word)).length };
+  }).filter(({ score }) => score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+  if (matches.length) {
+    return `Según las carreras y temas cargados en los perfiles de muestra, podrías explorar: ${matches.map(({ mentor }) => `${mentor.name} (${mentor.careerName}; temas: ${mentor.topics.slice(0, 2).join(', ')})`).join('; ')}. Es una coincidencia por palabras del perfil, no una evaluación de aptitudes. Revisá el directorio completo y elegí vos.`;
+  }
+  return 'Puedo orientarte sobre el objetivo de una mentoría, los horarios de muestra y los eventos. También podés escribir tu consulta libremente o explorar todos los perfiles en el directorio. No tengo información suficiente en la guía local para responder con seguridad a esta pregunta.';
+}
+
+function safeSources(value: unknown): Source[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((source): source is Source => {
+    if (!source || typeof source.title !== 'string' || typeof source.uri !== 'string') return false;
+    try { return new URL(source.uri).protocol === 'https:'; } catch { return false; }
+  }).slice(0, 4);
+}
+
+export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onClose, onNavigateToDirectorio }) => {
+  const [messages, setMessages] = useState<Message[]>([{
+    id: 'welcome', sender: 'assistant', origin: 'guide',
+    text: 'Hola, soy Pascalina. Podés pedirme ayuda para preparar una mentoría, buscar perfiles por temas o entender esta demostración. Cuando la IA esté disponible identificaré sus respuestas; si falla, verás una guía local claramente marcada. Las sugerencias pueden equivocarse: revisá los perfiles antes de decidir.',
+  }]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const suggestedQuestions = [
-    '¿Cómo redacto mi objetivo de 3 líneas para pedir mentoría?',
-    '¿Quiénes son los mentores destacados de Informática y Telecomunicaciones?',
-    '¿Cómo funciona la regla de los 30 minutos y la protección del egresado?',
-    '¿Qué son las Ferias de Talento Inverso y los Jurados Alumni?',
-  ];
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const inputRef = useRef<HTMLInputElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      scrollToBottom();
-    }
-  }, [messages, isOpen]);
-
-  // Intelligent local fallback matching UBP Conecta context
-  const generateLocalAnswer = (query: string): string => {
-    const q = query.toLowerCase();
-
-    if (q.includes('objetivo') || q.includes('3 lineas') || q.includes('temario') || q.includes('redactar')) {
-      return `📌 **Estructura recomendada para tu objetivo de 3 líneas:**\n\n1. **Tu situación actual:** Carrera que cursás y en qué etapa estás (ej: 4to año de Informática preparando CV).\n2. **Duda puntual o entregable:** Qué querés revisar con el graduado (ej: revisión de portfolio técnico o preguntas sobre requisitos de mercado).\n3. **Expectativa del encuentro:** Qué te gustaría llevarte de los 30 minutos (ej: claridad sobre salarios iniciales, contactos o sugerencias para entrevistas).\n\n*Recordá que este campo es obligatorio para que el mentor sepa exactamente qué preparar antes del encuentro.*`;
-    }
-
-    if (q.includes('informática') || q.includes('tecnología') || q.includes('software') || q.includes('chacón') || q.includes('chacon')) {
-      return `💻 **Mentores destacados en Tecnología:**\n\n- **Ing. Juan Chacón:** Co-fundador de Machinalis y Tech Director en Mercado Libre. Mentor de doingLABS UBP. Ideal para validación de MVPs técnicos e inteligencia artificial.\n- **Ing. Nazarena Bulacios:** Ganadora del Premio COPIME Nacional y Lead de Infraestructura en Enel Green Power. Excelente para tesis, energías limpias y corporaciones.\n\nPodés encontrarlos en la pestaña de **Directorio & Matching** para reservar una sesión de 30 minutos.`;
-    }
-
-    if (q.includes('telecomunicaciones') || q.includes('bulacios') || q.includes('copime')) {
-      return `📡 **Ingeniería en Telecomunicaciones:**\n\nTe recomiendo agendar con **Ing. Nazarena Bulacios** (Premio COPIME al mejor egresado de ingeniería del país, hoy en Enel Green Power). Orienta sobre formulación de tesis con impacto real, transición a energías renovables e inserción en empresas del sector.`;
-    }
-
-    if (q.includes('administración') || q.includes('marketing') || q.includes('contador') || q.includes('stang') || q.includes('negocios')) {
-      return `💼 **Mentores en Gestión & Negocios:**\n\n- **Lic. Matías Stang:** Director en Revolut (Londres), especialista en Fintech, finanzas globales y programas ISEP.\n- **Lic. Camila Benítez:** Head of Growth Marketing en Apex America.\n- **Cr. Marcos Villafañe:** Socio de Auditoría en PwC Argentina, ideal para ingresar a Big Four o práctica tributaria independiente.\n- **Lic. Florencia Valenzuela:** Fundadora de EcoTravel Patagonia (Empresa B certificada).`;
-    }
-
-    if (q.includes('30 min') || q.includes('minutos') || q.includes('burnout') || q.includes('protección') || q.includes('tiempo')) {
-      return `⏱️ **Metodología de Micro-Mentorías de 30 minutos:**\n\nPara evitar la sobrecarga (burnout) del graduado activo en el mercado:\n- Cada egresado habilita un **cupo mensual limitado** (máximo 1 o 2 bloques de 30 minutos).\n- Las sesiones duran exactamente **30 minutos**, cerradas y sin compromisos extensos.\n- El estudiante debe definir obligatoriamente su temario en 3 líneas antes de enviar la solicitud, asegurando que ambos lleguen preparados.`;
-    }
-
-    if (q.includes('feria') || q.includes('jurado') || q.includes('evento') || q.includes('flash')) {
-      return `🏛️ **Encuentros de Co-Creación UBP:**\n\n- **Ferias de Talento Inverso:** Los alumnos avanzados presentan proyectos de cátedra ante jurados de egresados que evalúan con mirada de industria.\n- **Mesas Redondas & Flash Mentoring:** Charlas relámpago virtuales o presenciales para resolver dudas masivas en 45 minutos sin sobrecargar a los mentores.\n\nPodés ver las fechas e inscribirte en la pestaña **Ferias & Eventos**.`;
-    }
-
-    return `UBP Conecta articula la red de más de 20.000 egresados de la Universidad Blas Pascal con estudiantes y graduados recientes. Podés explorar el **Directorio de Mentores**, agendar una sesión guiada de **30 minutos** con formato presencial o virtual, o consultar tus turnos en **Mis Conexiones**. ¿Te gustaría buscar un referente de tu carrera o sector profesional?`;
-  };
-
-  const handleSendMessage = async (textToSend?: string) => {
-    const text = textToSend ?? inputValue.trim();
-    if (!text || isLoading) return;
-
-    const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      sender: 'user',
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    if (!isOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    inputRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const elements = Array.from(dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), a[href]'));
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
+    document.addEventListener('keydown', onKeyDown);
+    return () => { document.removeEventListener('keydown', onKeyDown); previousFocus?.focus(); };
+  }, [isOpen, onClose]);
 
-    setMessages((prev) => [...prev, userMessage]);
-    if (!textToSend) setInputValue('');
+  useEffect(() => { if (isOpen) endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isOpen]);
+
+  const sendMessage = async (question?: string) => {
+    const text = (question ?? inputValue).trim();
+    if (!text || isLoading) return;
+    setMessages((previous) => [...previous, { id: crypto.randomUUID(), sender: 'user', text }]);
+    setInputValue('');
     setIsLoading(true);
-
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 15000);
     try {
-      // First attempt backend if available
       const response = await fetch('/api/assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          history: messages.map((m) => ({
-            role: m.sender === 'user' ? 'user' : 'model',
-            text: m.text,
-          })),
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }), signal: controller.signal,
       });
-
-      if (!response.ok) {
-        throw new Error('Fallback to local assistant');
-      }
-
+      if (!response.ok) throw new Error('assistant-unavailable');
       const data = await response.json();
-      const botMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        sender: 'assistant',
-        text: data.reply || generateLocalAnswer(text),
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
+      if (data.mode !== 'ai' || typeof data.reply !== 'string' || !data.reply.trim()) throw new Error('invalid-response');
+      setMessages((previous) => [...previous, {
+        id: crypto.randomUUID(), sender: 'assistant', origin: 'ai', text: data.reply.trim(),
+        sources: safeSources(data.sources), query: text,
+      }]);
     } catch {
-      // Graceful local intelligence fallback for static deployments (e.g. GitHub Pages)
-      setTimeout(() => {
-        const botMessage: Message = {
-          id: `assistant-${Date.now()}`,
-          sender: 'assistant',
-          text: generateLocalAnswer(text),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-        setMessages((prev) => [...prev, botMessage]);
-        setIsLoading(false);
-      }, 400);
-      return;
+      setMessages((previous) => [...previous, {
+        id: crypto.randomUUID(), sender: 'assistant', origin: 'guide',
+        text: localGuide(text), query: text, failed: true,
+      }]);
     } finally {
+      window.clearTimeout(timer);
       setIsLoading(false);
     }
+  };
+
+  const setFeedback = (id: string, feedback: 'useful' | 'not-useful') => {
+    setMessages((previous) => previous.map((message) => message.id === id ? { ...message, feedback } : message));
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-2xl border border-stone-200 max-w-xl w-full h-[85vh] max-h-[640px] flex flex-col shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="p-4 sm:p-5 bg-linear-to-r from-[#8B1D31] to-[#A3223A] text-white flex items-center justify-between shrink-0 shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-amber-300">
-              <Bot className="w-5 h-5" />
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 sm:p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="pascalina-title" className="flex h-[min(92dvh,720px)] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex shrink-0 items-start justify-between gap-3 bg-[#8B1D31] p-4 text-white">
+          <div className="flex items-start gap-3">
+            <Bot className="mt-0.5 h-6 w-6 shrink-0" />
             <div>
-              <div className="flex items-center gap-1.5">
-                <h3 className="font-bold text-sm text-white">Pascalina IA</h3>
-                <span className="text-[10px] px-1.5 py-0.2 bg-white/20 rounded font-semibold text-amber-200 uppercase">
-                  Copiloto UBP
-                </span>
-              </div>
-              <p className="text-[11px] text-stone-200">
-                Orientación en matching, temario de 3 líneas y agenda UBP Conecta
-              </p>
+              <h2 id="pascalina-title" className="font-bold">Pascalina · asistente IA</h2>
+              <p className="mt-0.5 text-xs text-white/85">Orientación sobre mentorías y perfiles de muestra</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white/80 hover:text-white p-1 rounded-md text-lg font-bold"
-          >
-            ✕
-          </button>
+          <button type="button" onClick={onClose} aria-label="Cerrar asistente" className="rounded-lg p-2 text-white hover:bg-white/15"><X className="h-5 w-5" /></button>
         </div>
-
-        {/* Messages Stream */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs bg-stone-50/50">
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={`flex flex-col ${
-                m.sender === 'user' ? 'items-end' : 'items-start'
-              }`}
-            >
-              <div
-                className={`max-w-[85%] rounded-2xl p-3.5 space-y-1 ${
-                  m.sender === 'user'
-                    ? 'bg-[#A3223A] text-white rounded-tr-xs shadow-xs'
-                    : 'bg-white text-stone-800 border border-stone-200 rounded-tl-xs shadow-2xs'
-                }`}
-              >
-                <div className="whitespace-pre-line leading-relaxed font-sans">
-                  {m.text}
-                </div>
-                <div
-                  className={`text-[9px] text-right font-mono ${
-                    m.sender === 'user' ? 'text-stone-200' : 'text-stone-400'
-                  }`}
-                >
-                  {m.timestamp}
-                </div>
+        <p className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-relaxed text-amber-950">
+          La IA puede equivocarse. No hay una medida de certeza para estas respuestas. Las reservas y perfiles de esta página son de demostración; verificá información importante antes de actuar.
+        </p>
+        <div role="log" aria-live="polite" className="flex-1 space-y-4 overflow-y-auto bg-stone-50 p-4">
+          {messages.map((message) => (
+            <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[92%] rounded-xl p-3 text-sm leading-relaxed sm:max-w-[85%] ${message.sender === 'user' ? 'bg-[#8B1D31] text-white' : 'border border-stone-200 bg-white text-stone-800'}`}>
+                {message.sender === 'assistant' && <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-[#8B1D31]">{message.origin === 'ai' ? 'Respuesta generada por IA' : 'Guía local de la página'}</p>}
+                {message.failed && <p className="mb-2 rounded bg-amber-50 p-2 text-xs text-amber-900">No se pudo conectar con la IA. Esta orientación proviene de la guía local.</p>}
+                <p className="whitespace-pre-wrap">{message.text}</p>
+                {message.origin === 'ai' && (message.sources?.length ? (
+                  <div className="mt-3 border-t border-stone-200 pt-2 text-xs">
+                    <strong>Fuentes para revisar:</strong>
+                    <ul className="mt-1 space-y-1">{message.sources.map((source) => <li key={source.uri}><a className="text-[#8B1D31] underline" href={source.uri} target="_blank" rel="noopener noreferrer">{source.title}</a></li>)}</ul>
+                  </div>
+                ) : <p className="mt-2 text-xs text-stone-600">Sin fuentes externas verificables en esta respuesta.</p>)}
+                {message.sender === 'assistant' && message.query && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-stone-200 pt-2 text-xs">
+                    {message.failed && <button type="button" onClick={() => sendMessage(message.query)} disabled={isLoading} className="inline-flex items-center gap-1 font-semibold text-[#8B1D31] underline disabled:opacity-50"><RefreshCw className="h-3 w-3" /> Reintentar IA</button>}
+                    <button type="button" onClick={() => { setInputValue(message.query || ''); inputRef.current?.focus(); }} className="font-semibold text-[#8B1D31] underline">Editar pregunta</button>
+                    <button type="button" onClick={() => setFeedback(message.id, 'useful')} aria-pressed={message.feedback === 'useful'} className={message.feedback === 'useful' ? 'font-bold text-emerald-700' : 'text-stone-600'}>Útil</button>
+                    <button type="button" onClick={() => setFeedback(message.id, 'not-useful')} aria-pressed={message.feedback === 'not-useful'} className={message.feedback === 'not-useful' ? 'font-bold text-rose-700' : 'text-stone-600'}>No me sirvió</button>
+                  </div>
+                )}
+                {message.feedback && <p className="mt-1 text-xs text-stone-500">Preferencia registrada en esta conversación.</p>}
               </div>
             </div>
           ))}
-
-          {isLoading && (
-            <div className="flex items-center gap-2 text-stone-400 text-xs pl-2">
-              <div className="w-2 h-2 rounded-full bg-[#A3223A] animate-bounce" />
-              <div className="w-2 h-2 rounded-full bg-[#A3223A] animate-bounce [animation-delay:0.2s]" />
-              <div className="w-2 h-2 rounded-full bg-[#A3223A] animate-bounce [animation-delay:0.4s]" />
-              <span className="text-[11px] ml-1">Pascalina está redactando...</span>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
+          {isLoading && <p className="text-sm text-stone-600" role="status">La IA está preparando una respuesta…</p>}
+          <div ref={endRef} />
         </div>
-
-        {/* Suggested Quick Prompts */}
-        <div className="p-2.5 bg-white border-t border-stone-200 overflow-x-auto flex items-center gap-1.5 scrollbar-none shrink-0">
-          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider pl-1 shrink-0">
-            Sugerencias:
-          </span>
-          {suggestedQuestions.map((q, i) => (
-            <button
-              key={i}
-              onClick={() => handleSendMessage(q)}
-              className="px-2.5 py-1 bg-stone-100 hover:bg-[#A3223A]/10 hover:text-[#A3223A] text-stone-700 text-[11px] rounded-full whitespace-nowrap transition-colors font-medium shrink-0"
-            >
-              {q}
-            </button>
-          ))}
+        <div className="shrink-0 border-t border-stone-200 bg-white p-3">
+          <div className="mb-2 flex gap-2 overflow-x-auto pb-1">{suggestions.map((question) => <button key={question} type="button" disabled={isLoading} onClick={() => sendMessage(question)} className="shrink-0 rounded-full border border-stone-300 px-3 py-1.5 text-xs text-stone-700 hover:border-[#8B1D31] disabled:opacity-50">{question}</button>)}</div>
+          <form onSubmit={(event) => { event.preventDefault(); sendMessage(); }} className="flex gap-2">
+            <label htmlFor="pascalina-question" className="sr-only">Escribí tu pregunta</label>
+            <input id="pascalina-question" ref={inputRef} value={inputValue} onChange={(event) => setInputValue(event.target.value)} placeholder="Escribí tu pregunta…" className="min-w-0 flex-1 rounded-lg border border-stone-300 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-[#8B1D31]" />
+            <button type="submit" disabled={!inputValue.trim() || isLoading} className="inline-flex items-center gap-1 rounded-lg bg-[#8B1D31] px-4 py-2 text-sm font-semibold text-white disabled:bg-stone-300"><Send className="h-4 w-4" /> Enviar</button>
+          </form>
+          {onNavigateToDirectorio && <button type="button" onClick={() => { onClose(); onNavigateToDirectorio(); }} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#8B1D31] underline"><Search className="h-3.5 w-3.5" /> Ver todos los perfiles</button>}
         </div>
-
-        {/* Input Bar */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSendMessage();
-          }}
-          className="p-3 bg-white border-t border-stone-200 flex items-center gap-2 shrink-0"
-        >
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Preguntale a Pascalina cómo pedir tu mentoría o redactar el temario..."
-            className="flex-1 px-3.5 py-2 text-xs bg-stone-50 border border-stone-200 rounded-lg focus:outline-hidden focus:border-[#A3223A] focus:bg-white"
-          />
-          <button
-            type="submit"
-            disabled={!inputValue.trim() || isLoading}
-            className="px-4 py-2 bg-[#A3223A] hover:bg-[#8B1D31] disabled:bg-stone-200 disabled:text-stone-400 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0"
-          >
-            <span>Enviar</span>
-            <Send className="w-3.5 h-3.5" />
-          </button>
-        </form>
-      </div>
+      </section>
     </div>
   );
 };
