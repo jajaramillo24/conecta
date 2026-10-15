@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Bot, Send, X, RefreshCw, Search } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { INITIAL_MENTORS } from '../data/mockData';
 
 type Source = { title: string; uri: string };
@@ -55,6 +57,44 @@ function safeSources(value: unknown): Source[] {
     if (!source || typeof source.title !== 'string' || typeof source.uri !== 'string') return false;
     try { return new URL(source.uri).protocol === 'https:'; } catch { return false; }
   }).slice(0, 4);
+}
+
+function AssistantMarkdown({ text }: { text: string }) {
+  return (
+    <div className="min-w-0 break-words">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        skipHtml
+        components={{
+          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+          h1: ({ children }) => <h3 className="mb-2 mt-3 text-base font-bold first:mt-0">{children}</h3>,
+          h2: ({ children }) => <h3 className="mb-2 mt-3 text-base font-bold first:mt-0">{children}</h3>,
+          h3: ({ children }) => <h3 className="mb-2 mt-3 font-bold first:mt-0">{children}</h3>,
+          ul: ({ children }) => <ul className="mb-2 ml-5 list-disc space-y-1">{children}</ul>,
+          ol: ({ children }) => <ol className="mb-2 ml-5 list-decimal space-y-1">{children}</ol>,
+          li: ({ children }) => <li className="pl-0.5">{children}</li>,
+          blockquote: ({ children }) => <blockquote className="mb-2 border-l-2 border-[#8B1D31] pl-3 text-stone-600">{children}</blockquote>,
+          a: ({ href, children }) => {
+            try {
+              if (href && new URL(href).protocol === 'https:') {
+                return <a href={href} target="_blank" rel="noopener noreferrer" className="text-[#8B1D31] underline break-all">{children}</a>;
+              }
+            } catch { /* Only absolute HTTPS links are allowed in AI responses. */ }
+            return <span>{children}</span>;
+          },
+          pre: ({ children }) => <pre className="mb-2 max-w-full overflow-x-auto rounded-lg bg-stone-100 p-3 text-xs leading-relaxed">{children}</pre>,
+          code: ({ children, className }) => <code className={className ? `${className} font-mono` : 'rounded bg-stone-100 px-1 py-0.5 font-mono text-xs'}>{children}</code>,
+          table: ({ children }) => <div className="mb-2 max-w-full overflow-x-auto"><table className="min-w-full border-collapse text-left text-xs">{children}</table></div>,
+          th: ({ children }) => <th className="border border-stone-300 bg-stone-100 px-2 py-1 font-semibold">{children}</th>,
+          td: ({ children }) => <td className="border border-stone-300 px-2 py-1">{children}</td>,
+          hr: () => <hr className="my-3 border-stone-200" />,
+          img: ({ alt }) => <span>{alt || 'Imagen'}</span>,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
+  );
 }
 
 export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onClose, onNavigateToDirectorio }) => {
@@ -147,7 +187,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({ isOpen, onCl
               <div className={`max-w-[92%] rounded-xl p-3 text-sm leading-relaxed sm:max-w-[85%] ${message.sender === 'user' ? 'bg-[#8B1D31] text-white' : 'border border-stone-200 bg-white text-stone-800'}`}>
                 {message.sender === 'assistant' && <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-[#8B1D31]">{message.origin === 'ai' ? 'Respuesta generada por IA' : 'Guía local de la página'}</p>}
                 {message.failed && <p className="mb-2 rounded bg-amber-50 p-2 text-xs text-amber-900">No se pudo conectar con la IA. Esta orientación proviene de la guía local.</p>}
-                <p className="whitespace-pre-wrap">{message.text}</p>
+                {message.sender === 'assistant' ? <AssistantMarkdown text={message.text} /> : <p className="whitespace-pre-wrap">{message.text}</p>}
                 {message.origin === 'ai' && (message.sources?.length ? (
                   <div className="mt-3 border-t border-stone-200 pt-2 text-xs">
                     <strong>Fuentes para revisar:</strong>

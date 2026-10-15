@@ -14,11 +14,12 @@ export const UBPLogo: React.FC<UBPLogoProps> = ({
   className = '',
   size = 'md',
 }) => {
+  const assetBase = import.meta.env.BASE_URL;
   if (variant === 'sigla' || variant === 'horizontal') {
     const dimension = size === 'sm' ? 42 : size === 'lg' ? 60 : 48;
     return (
       <div className={`inline-flex items-center gap-2.5 ${className}`}>
-        <img src="/ubp-shield-red.png" width={dimension} height={dimension} alt="" className="shrink-0 object-contain" />
+        <img src={`${assetBase}ubp-shield-red.png`} width={dimension} height={dimension} alt="" className="shrink-0 object-contain" />
         {variant === 'horizontal' && (
           <div className="leading-tight">
             <span className="block text-[10px] font-semibold uppercase tracking-[0.16em] text-[#A3223A]">Universidad</span>
@@ -33,7 +34,7 @@ export const UBPLogo: React.FC<UBPLogoProps> = ({
   return (
     <div className={`${variant === 'white' ? 'inline-block rounded-lg bg-white p-3' : 'inline-block'} ${className}`}>
       <img
-        src={variant === 'white' ? '/ubp-logo-black.png' : '/ubp-logo-red.png'}
+        src={`${assetBase}${variant === 'white' ? 'ubp-logo-black.png' : 'ubp-logo-red.png'}`}
         alt="Universidad Blas Pascal"
         className={size === 'lg' ? 'w-40 h-auto' : size === 'sm' ? 'w-24 h-auto' : 'w-32 h-auto'}
       />
