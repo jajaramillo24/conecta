@@ -35,6 +35,7 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
   onOpenOfferSlotModal,
 }) => {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'guia' | 'senior'>('all');
   const [selectedCareer, setSelectedCareer] = useState<CareerId | 'all'>(initialCareer || 'all');
   const [selectedIndustry, setSelectedIndustry] = useState<string>('all');
   const [selectedExperience, setSelectedExperience] = useState<string>('all');
@@ -49,6 +50,11 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
   // Filter logic
   const filteredMentors = useMemo(() => {
     return mentors.filter((mentor) => {
+      // Mentor category filter (Iteración 2 del informe: Guía 1-4 años vs Sénior 5+ años)
+      if (selectedCategory !== 'all' && mentor.mentorCategory !== selectedCategory) {
+        return false;
+      }
+
       // Career filter
       if (selectedCareer !== 'all' && mentor.career !== selectedCareer) {
         return false;
@@ -95,10 +101,11 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
 
       return true;
     });
-  }, [mentors, selectedCareer, selectedIndustry, selectedExperience, selectedModality, searchQuery]);
+  }, [mentors, selectedCategory, selectedCareer, selectedIndustry, selectedExperience, selectedModality, searchQuery]);
 
   const handleResetFilters = () => {
     setSearchQuery('');
+    setSelectedCategory('all');
     setSelectedCareer('all');
     setSelectedIndustry('all');
     setSelectedExperience('all');
@@ -107,6 +114,7 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
 
   const hasActiveFilters = 
     searchQuery !== '' || 
+    selectedCategory !== 'all' ||
     selectedCareer !== 'all' || 
     selectedIndustry !== 'all' || 
     selectedExperience !== 'all' || 
@@ -141,8 +149,48 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
         )}
       </div>
 
-      {/* 2. Filtros Dinámicos (Sección 5.1 del documento) */}
+      {/* 2. Filtros Dinámicos (Sección 5.1 e Iteración 6.3 del documento) */}
       <div className="bg-white rounded-xl border border-stone-200 p-5 shadow-xs space-y-4">
+        {/* Category Tabs: Flexibilización de perfiles (Iteración 2) */}
+        <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-stone-100">
+          <span className="text-xs font-bold text-stone-700 mr-1">Perfil de Mentor:</span>
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              selectedCategory === 'all'
+                ? 'bg-stone-900 text-white shadow-xs'
+                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+            }`}
+          >
+            Todos ({mentors.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('guia')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              selectedCategory === 'guia'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+            }`}
+          >
+            <span>🌱</span>
+            <span>Mentores Guía (1-4 años de egreso)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('senior')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              selectedCategory === 'senior'
+                ? 'bg-[#A3223A] text-white shadow-xs'
+                : 'bg-rose-50 text-[#A3223A] hover:bg-rose-100 border border-[#A3223A]/20'
+            }`}
+          >
+            <span>⭐</span>
+            <span>Mentores Sénior (5+ años de trayectoria)</span>
+          </button>
+        </div>
+
         {/* Search Input Row */}
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
           <div className="relative w-full">
@@ -347,8 +395,19 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
                     </div>
                   </div>
 
-                  {/* Badges de Reciprocidad (Sección 4.1 del documento) */}
-                  <div className="flex flex-wrap gap-1">
+                  {/* Badges de Categoría (Iteración 2) y Reciprocidad (Sección 4.1) */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {mentor.mentorCategory === 'guia' ? (
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <span>🌱</span>
+                        <span>Mentor Guía (1-4 años)</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <span>⭐</span>
+                        <span>Mentor Sénior (5+ años)</span>
+                      </span>
+                    )}
                     {mentor.badges.map((b, i) => (
                       <span
                         key={i}
@@ -410,7 +469,7 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
                   </div>
                 </div>
 
-                {/* Direct CTA Button (Flujo Crítico < 4 pasos) */}
+                {/* Direct CTA Button (Flujo Crítico < 4 pasos - Iteración 4: Sesión estándar o exprés) */}
                 <button
                   type="button"
                   onClick={() => onBookMentor(mentor)}
@@ -422,7 +481,7 @@ export const MentorDirectorySection: React.FC<MentorDirectorySectionProps> = ({
                   }`}
                 >
                   <Calendar className="w-3.5 h-3.5" />
-                  <span>{freeSlots > 0 ? 'Solicitar Mentoría (30 min)' : 'Sin cupos disponibles este mes'}</span>
+                  <span>{freeSlots > 0 ? 'Solicitar Mentoría / Consulta Exprés' : 'Sin cupos disponibles este mes'}</span>
                 </button>
               </div>
             );

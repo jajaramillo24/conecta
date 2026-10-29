@@ -90,12 +90,16 @@ export const UBP_CAREERS: Record<CareerId, CareerInfo> = {
 
 export type ModalityType = 'Virtual (Google Meet)' | 'Presencial (Campus UBP)' | 'Híbrida';
 
+export type MentorCategory = 'guia' | 'senior';
+export type SessionFormat = 'estandar' | 'expres';
+
 export interface MentorSlot {
   id: string;
   day: string; // e.g. "2026-10-15"
   time: string; // e.g. "18:00 - 18:30"
   available: boolean;
   modalityPreference?: ModalityType;
+  durationMinutes?: number;
 }
 
 export interface Mentor {
@@ -108,6 +112,7 @@ export interface Mentor {
   careerName: string;
   graduationYear: number;
   experienceYears: number;
+  mentorCategory: MentorCategory; // 'guia' (1-4 años de egreso, foco en inserción) | 'senior' (5+ años)
   industry: string;
   location: string;
   bio: string;
@@ -142,7 +147,8 @@ export interface MentorshipBooking {
   studentCareer: string;
   date: string;
   time: string;
-  durationMinutes: number; // Fijo 30 min
+  durationMinutes: number; // 30 min estándar o 15 min exprés
+  sessionFormat?: SessionFormat; // 'estandar' o 'expres'
   modality: 'Virtual (Google Meet)' | 'Presencial (Campus UBP)';
   locationDetail: string; // "Enlace Google Meet" o "Campus Argüello - Sala Coworking / doingLABS"
   meetingUrl?: string;

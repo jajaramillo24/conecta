@@ -25,7 +25,11 @@ export const Header: React.FC<HeaderProps> = ({
   const navItems: { id: TabType; label: string; icon: React.ReactNode }[] = [
     { id: 'inicio', label: 'Inicio', icon: <Compass className="w-4 h-4" /> },
     { id: 'directorio', label: 'Directorio de Mentores', icon: <GraduationCap className="w-4 h-4" /> },
-    { id: 'sesiones', label: 'Mis Conexiones', icon: <Clock className="w-4 h-4" /> },
+    { 
+      id: 'sesiones', 
+      label: userRole === 'egresado' ? 'Mis Encuentros / Mi Disponibilidad' : 'Mis Encuentros', 
+      icon: <Clock className="w-4 h-4" /> 
+    },
     { id: 'eventos', label: 'Ferias & Eventos', icon: <Calendar className="w-4 h-4" /> },
   ];
 
