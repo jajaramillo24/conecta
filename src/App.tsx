@@ -41,6 +41,7 @@ export default function App() {
   });
   const [offerSlotTime, setOfferSlotTime] = useState('18:00 - 18:30');
   const [offerSlotError, setOfferSlotError] = useState('');
+  const [offerSlotFormat, setOfferSlotFormat] = useState<'flexible' | 'estandar' | 'expres'>('flexible');
 
   // Handlers for Navigation with search filters
   const handleNavigateToDirectorio = (search?: string, career?: CareerId) => {
@@ -89,6 +90,13 @@ export default function App() {
       ...mentor,
       availableSlots: mentor.availableSlots.map((slot) => slot.day === booking.date && slot.time === booking.time ? { ...slot, available: true } : slot),
     } : mentor));
+  };
+
+  // Reprogramar encuentro (Iteración 3)
+  const handleRescheduleBooking = (bookingId: string, newDate: string, newTime: string) => {
+    setBookings((prev) =>
+      prev.map((b) => (b.id === bookingId ? { ...b, date: newDate, time: newTime } : b))
+    );
   };
 
   // Toggle Event Registration
@@ -234,7 +242,7 @@ export default function App() {
           />
         )}
 
-        {/* Vista 4: Panel de Gestión de Sesiones y Red (Mis Conexiones) */}
+        {/* Vista 4: Panel de Gestión de Sesiones y Red (Mis Conexiones / Mi Disponibilidad) */}
         {activeTab === 'sesiones' && (
           <SessionsManagementSection
             bookings={bookings}
@@ -248,6 +256,8 @@ export default function App() {
               setActiveTab('directorio');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
+            onRescheduleBooking={handleRescheduleBooking}
+            onOpenOfferSlotModal={() => setIsOfferSlotModalOpen(true)}
           />
         )}
 
@@ -320,7 +330,7 @@ export default function App() {
 
               <div>
                 <label className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
-                  Horario de 30 minutos
+                  Horario de inicio
                 </label>
                 <select
                   value={offerSlotTime}
@@ -332,6 +342,21 @@ export default function App() {
                   <option value="18:00 - 18:30">18:00 - 18:30 hs</option>
                   <option value="18:30 - 19:00">18:30 - 19:00 hs</option>
                   <option value="19:00 - 19:30">19:00 - 19:30 hs</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-stone-600 uppercase mb-1">
+                  Formato admitido en este cupo
+                </label>
+                <select
+                  value={offerSlotFormat}
+                  onChange={(e) => setOfferSlotFormat(e.target.value as 'flexible' | 'estandar' | 'expres')}
+                  className="w-full px-3 py-2 border border-stone-200 rounded-lg focus:border-[#A3223A] focus:outline-hidden"
+                >
+                  <option value="flexible">Flexible (Sesión Estándar 30 min o Consulta Exprés 15-20 min)</option>
+                  <option value="estandar">Solo Sesión Estándar (30 min)</option>
+                  <option value="expres">Solo Consulta Exprés (15-20 min)</option>
                 </select>
               </div>
 
@@ -349,7 +374,7 @@ export default function App() {
                   type="submit"
                   className="px-4 py-2 bg-[#A3223A] text-white font-bold rounded-lg hover:bg-[#8B1D31]"
                 >
-                  Habilitar Cupo (30 min)
+                  Habilitar Cupo en Agenda
                 </button>
               </div>
             </form>

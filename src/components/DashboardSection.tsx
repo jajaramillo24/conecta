@@ -98,7 +98,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
             {userRole === 'estudiante' ? (
               <>
                 Conectá con egresados <br className="hidden sm:block" />
-                <span className="text-amber-300">en sesiones guiadas de 30 minutos.</span>
+                <span className="text-amber-300">en mentorías de 15 o 30 minutos.</span>
               </>
             ) : (
               <>
@@ -111,11 +111,11 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
           <p className="text-stone-100 text-sm sm:text-base leading-relaxed max-w-2xl font-normal opacity-95">
             {userRole === 'estudiante' ? (
               <>
-                Olvidate del contacto en frío en LinkedIn. En UBP Conecta encontrás a profesionales de tu misma carrera dispuestos a orientarte en tu primer empleo formal, revisión de portfolio/CV y preparación para entrevistas.
+                Enfocado en inserción laboral, materias finales y revisión de CV con <strong>Mentores Guía</strong> (1-4 años de egreso) y <strong>Mentores Sénior</strong>. Elegí entre <em>Consulta Exprés (15-20 min)</em> o <em>Sesión Estándar (30 min)</em>.
               </>
             ) : (
               <>
-                Retribuí valor a la comunidad de la Universidad Blas Pascal bajo un esquema estructurado: definís tu cupo de 1 o 2 bloques de 30 min al mes y recibís únicamente solicitudes con temario previo concreto.
+                Retribuí valor a la comunidad de la UBP como <strong>Mentor Guía</strong> o <strong>Mentor Sénior</strong>: administrá tus cupos mensuales con 1 clic, pausá ante viajes y recibí solicitudes con temario previo estructurado.
               </>
             )}
           </p>
@@ -197,7 +197,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                       : 'text-white/80 hover:text-white'
                   }`}
                 >
-                  Egresado Mentor (5+ Años)
+                  Egresado Mentor (Guía / Sénior)
                 </button>
               </div>
             </div>
@@ -231,12 +231,12 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
 
         <div className="bg-white p-5 rounded-xl border border-stone-200 shadow-2xs hover:border-[#A3223A]/30 transition-colors">
           <div className="flex items-center justify-between text-stone-500 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Micro-Mentorías</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Mentorías & Exprés</span>
             <Clock className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-black text-stone-900">30 min / sesión</div>
+          <div className="text-2xl font-black text-stone-900">15 o 30 min</div>
           <p className="text-[11px] text-stone-500 mt-1">
-            Encuentros ágiles 1 a 1 orientados a dudas concretas y revisión de perfil.
+            Encuentros ágiles 1 a 1: Consulta Exprés (15-20 min) o Sesión Estándar (30 min).
           </p>
         </div>
 
@@ -422,6 +422,21 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
 
                   </div>
 
+                  {/* Badges de Categoría (Iteración 2) */}
+                  <div>
+                    {mentor.mentorCategory === 'guia' ? (
+                      <span className="text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                        <span>🌱</span>
+                        <span>Mentor Guía (1-4 años)</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                        <span>⭐</span>
+                        <span>Mentor Sénior (5+ años)</span>
+                      </span>
+                    )}
+                  </div>
+
                   {/* Role Title & Bio */}
                   <div>
                     <h4 className="text-xs font-semibold text-stone-800 line-clamp-1">
@@ -466,7 +481,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                   </div>
                 </div>
 
-                {/* Direct CTA Button */}
+                {/* Direct CTA Button (Iteración 4: Sesión estándar o exprés) */}
                 <button
                   type="button"
                   onClick={() => onBookMentor(mentor)}
@@ -478,7 +493,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                   }`}
                 >
                   <Calendar className="w-3.5 h-3.5" />
-                  <span>{freeSlots > 0 ? 'Solicitar mentoría de muestra' : 'Sin horarios futuros'}</span>
+                  <span>{freeSlots > 0 ? 'Solicitar Mentoría / Consulta Exprés' : 'Sin horarios disponibles este mes'}</span>
                 </button>
               </div>
             );
